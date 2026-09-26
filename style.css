@@ -148,3 +148,9 @@ footer nav a {
 .succes {
     color: #16a34a;
 }
+@media (max-width: 350px) {
+    header nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
