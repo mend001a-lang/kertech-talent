@@ -158,11 +158,24 @@
                 ></textarea>
 
                 <p id="erreurDescription"></p>
+                <label for="budgetProjet">Budget (€)</label>
+                <input type="number" id="budgetProjet" min="1">
+                <p id="erreurBudget"></p>
+<label for="categorieProjet">Catégorie</label>
 
+<select id="categorieProjet">
+    <option value="">Choisissez une catégorie</option>
+    <option value="Développement web">Développement web</option>
+    <option value="Graphisme">Graphisme</option>
+    <option value="Rédaction">Rédaction</option>
+</select>
+
+<p id="erreurCategorie"></p>
 
                 <button type="submit">
                     Publier
                 </button>
+                
 
             </form>
 

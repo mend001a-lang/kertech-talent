@@ -154,3 +154,16 @@ footer nav a {
         justify-content: center;
     }
 }
+.btn-supprimer {
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-supprimer:hover {
+    background-color: #b91c1c;
+}

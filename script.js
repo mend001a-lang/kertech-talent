@@ -13,6 +13,8 @@ const formProjet = document.querySelector("#formProjet");
 const messageProjet = document.querySelector("#messageProjet");
 const erreurTitre = document.querySelector("#erreurTitre");
 const erreurDescription = document.querySelector("#erreurDescription");
+const categorieProjet = document.querySelector("#categorieProjet");
+const erreurCategorie = document.querySelector("#erreurCategorie");
 
 formulaire.addEventListener("submit", function(event) {
     event.preventDefault();
@@ -20,6 +22,7 @@ formulaire.addEventListener("submit", function(event) {
     const nomUtilisateur = nom.value;
     const emailUtilisateur = email.value;
     const messageUtilisateur = message.value;
+    const categorie = categorieProjet.value;
 
  if (nomUtilisateur.trim() === "") {
     messageErreur.textContent = "Veuillez saisir votre nom.";
@@ -63,14 +66,17 @@ publierProjet.addEventListener("click", function(event) {
 formProjet.addEventListener("submit", function(event) {
     event.preventDefault();
 
-    const titre = titreProjet.value;
-    const description = descriptionProjet.value;
+const titre = titreProjet.value;
+const description = descriptionProjet.value;
+const budget = budgetProjet.value;
+const categorie = categorieProjet.value;
 
-
-   let formulaireValide = true;
+let formulaireValide = true;
 
 erreurTitre.textContent = "";
 erreurDescription.textContent = "";
+erreurBudget.textContent = "";
+erreurCategorie.textContent = "";
 
 if (titre.trim() === "") {
     erreurTitre.textContent = "Veuillez saisir un titre.";
@@ -84,8 +90,26 @@ if (description.trim() === "") {
     formulaireValide = false;
 }
 
+if (budget === "" || budget < 1) {
+    erreurBudget.textContent = "Veuillez saisir un budget valide.";
+    erreurBudget.classList.add("erreur");
+    formulaireValide = false;
+}
+
+if (categorie === "") {
+    erreurCategorie.textContent = "Veuillez choisir une catégorie.";
+    erreurCategorie.classList.add("erreur");
+    formulaireValide = false;
+}
+
 if (formulaireValide === false) {
     return;
+}   
+
+if (categorie === "") {
+    erreurCategorie.textContent = "Veuillez choisir une catégorie.";
+    erreurCategorie.classList.add("erreur");
+    formulaireValide = false;
 }
 
     const nouvelleCarte = document.createElement("article");
@@ -95,19 +119,29 @@ if (formulaireValide === false) {
 
     const nouvelleDescription = document.createElement("p");
     nouvelleDescription.textContent = description;
+    const nouveauBudget = document.createElement("p");
+nouveauBudget.textContent = "Budget : " + budget + " €";
+
+const nouvelleCategorie = document.createElement("p");
+nouvelleCategorie.textContent = "Catégorie : " + categorie;
 
     nouvelleCarte.appendChild(nouveauTitre);
     nouvelleCarte.appendChild(nouvelleDescription);
+    nouvelleCarte.appendChild(nouveauBudget);
+    nouvelleCarte.appendChild(nouvelleCategorie);
+
     const boutonSupprimer = document.createElement("button");
 boutonSupprimer.textContent = "Supprimer";
+boutonSupprimer.classList.add("btn-supprimer");
 
 boutonSupprimer.addEventListener("click", function() {
     const confirmation = confirm("Voulez-vous vraiment supprimer ce projet ?");
 
     if (confirmation) {
         nouvelleCarte.remove();
+        messageProjet.textContent = "Le projet a bien été supprimé.";
     }
-    messageProjet.textContent = "Le projet a bien été supprimé.";
+    
 
 });
 
