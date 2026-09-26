@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KërTech Talent</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>KërTech Talent</h1>
+
+        <nav>
+            <a href="#">Accueil</a>
+            <a href="#">Freelances</a>
+            <a href="#">Projets</a>
+            <a href="#">Connexion</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- Présentation -->
+        <section>
+            <h2>Trouver le freelance qu'il vous faut</h2>
+
+            <p>
+                KërTech Talent met en relation les entreprises
+                et les talents freelances.
+            </p>
+
+            <a href="#" class="cta">Trouver un freelance</a>
+            <a href="#" class="cta">Devenir freelance</a>
+        </section>
+
+
+        <!-- Services -->
+        <section>
+            <h2>Ce que vous pouvez faire sur KërTech Talent</h2>
+
+            <article>
+                <h3>Je cherche un freelance</h3>
+                <p>
+                    Trouvez des professionnels pour réaliser vos projets.
+                </p>
+            </article>
+
+            <article>
+                <h3>Je suis freelance</h3>
+                <p>
+                    Présentez vos compétences et trouvez de nouvelles missions.
+                </p>
+            </article>
+        </section>
+
+
+        <!-- Fonctionnement -->
+        <section>
+            <h2>Comment ça marche ?</h2>
+
+            <div class="cards-grid">
+
+                <article>
+                    <h3>1. Créez votre profil</h3>
+                    <p>
+                        Présentez vos compétences ou vos besoins.
+                    </p>
+                </article>
+
+                <article>
+                    <h3>2. Trouvez la bonne personne</h3>
+                    <p>
+                        Recherchez un freelance ou découvrez des projets.
+                    </p>
+                </article>
+
+                <article>
+                    <h3>3. Lancez votre projet</h3>
+                    <p>
+                        Échangez et commencez votre collaboration.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+
+        <!-- Projets -->
+        <section>
+            <h2>Projets disponibles</h2>
+
+            <div class="cards-grid" id="projetsGrid">
+
+                <article>
+                    <h3>Créer un site vitrine</h3>
+                    <p>
+                        Recherche d'un développeur pour créer
+                        un site vitrine moderne.
+                    </p>
+                </article>
+
+                <article>
+                    <h3>Créer une identité visuelle</h3>
+                    <p>
+                        Recherche d'un graphiste pour concevoir
+                        un logo et une charte graphique.
+                    </p>
+                </article>
+
+                <article>
+                    <h3>Rédiger des contenus web</h3>
+                    <p>
+                        Recherche d'un rédacteur pour créer
+                        des contenus adaptés au web.
+                    </p>
+                </article>
+
+            </div>
+
+            <a href="#" class="project-link" id="publierProjet">
+                Publier un projet
+            </a>
+
+            <!-- Formulaire de publication -->
+            <form id="formProjet" hidden>
+
+                <label for="titreProjet">
+                    Titre du projet
+                </label>
+
+                <input
+                    type="text"
+                    id="titreProjet"
+                >
+
+                <p id="erreurTitre"></p>
+
+
+                <label for="descriptionProjet">
+                    Description
+                </label>
+
+                <textarea
+                    id="descriptionProjet"
+                ></textarea>
+
+                <p id="erreurDescription"></p>
+
+
+                <button type="submit">
+                    Publier
+                </button>
+
+            </form>
+
+            <p id="messageProjet"></p>
+        </section>
+
+
+        <!-- Freelances -->
+        <section>
+            <h2>Nos freelances</h2>
+
+            <div class="cards-grid">
+
+                <article>
+                    <h3>Aminata Diop</h3>
+                    <p>Développeuse web</p>
+                    <p>
+                        Compétences : HTML, CSS, JavaScript
+                    </p>
+                </article>
+
+                <article>
+                    <h3>Moussa Ndiaye</h3>
+                    <p>Graphiste</p>
+                    <p>
+                        Compétences : Logo, identité visuelle, Photoshop
+                    </p>
+                </article>
+
+                <article>
+                    <h3>Fatou Sow</h3>
+                    <p>Rédactrice web</p>
+                    <p>
+                        Compétences : Articles, SEO, communication
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+
+        <!-- Contact -->
+        <section>
+            <h2>Rejoignez KërTech Talent</h2>
+
+            <form id="formContact">
+
+                <label for="nom">
+                    Nom :
+                </label>
+
+                <input
+                    type="text"
+                    id="nom"
+                    name="nom"
+                >
+
+
+                <label for="email">
+                    Email :
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                >
+
+
+                <label for="message">
+                    Votre message :
+                </label>
+
+                <textarea
+                    id="message"
+                    name="message"
+                ></textarea>
+
+
+                <button type="submit">
+                    Envoyer
+                </button>
+
+                <p id="messageErreur"></p>
+
+            </form>
+        </section>
+
+    </main>
+
+
+    <footer>
+        <p>
+            &copy; 2026 KërTech Talent - Tous droits réservés.
+        </p>
+
+        <nav>
+            <a href="#">Mentions légales</a>
+            <a href="#">Contact</a>
+        </nav>
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
