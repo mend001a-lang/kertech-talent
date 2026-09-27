@@ -20,7 +20,12 @@
 
 <body>
 
+    <!-- =========================
+         HEADER
+    ========================== -->
+
     <header>
+
         <h1>KërTech Talent</h1>
 
         <nav>
@@ -29,12 +34,18 @@
             <a href="#">Projets</a>
             <a href="#">Connexion</a>
         </nav>
+
     </header>
+
 
     <main>
 
-        <!-- Présentation -->
+        <!-- =========================
+             PRÉSENTATION
+        ========================== -->
+
         <section>
+
             <h2>Trouver le freelance qu'il vous faut</h2>
 
             <p>
@@ -42,108 +53,228 @@
                 et les talents freelances.
             </p>
 
-            <a href="#" class="cta">Trouver un freelance</a>
-            <a href="#" class="cta">Devenir freelance</a>
+            <a href="#" class="cta">
+                Trouver un freelance
+            </a>
+
+            <a href="#" class="cta">
+                Devenir freelance
+            </a>
+
         </section>
 
 
-        <!-- Services -->
+        <!-- =========================
+             SERVICES
+        ========================== -->
+
         <section>
-            <h2>Ce que vous pouvez faire sur KërTech Talent</h2>
+
+            <h2>
+                Ce que vous pouvez faire sur KërTech Talent
+            </h2>
 
             <article>
+
                 <h3>Je cherche un freelance</h3>
+
                 <p>
                     Trouvez des professionnels pour réaliser vos projets.
                 </p>
+
             </article>
 
             <article>
+
                 <h3>Je suis freelance</h3>
+
                 <p>
                     Présentez vos compétences et trouvez de nouvelles missions.
                 </p>
+
             </article>
+
         </section>
 
 
-        <!-- Fonctionnement -->
+        <!-- =========================
+             FONCTIONNEMENT
+        ========================== -->
+
         <section>
+
             <h2>Comment ça marche ?</h2>
 
             <div class="cards-grid">
 
                 <article>
+
                     <h3>1. Créez votre profil</h3>
+
                     <p>
                         Présentez vos compétences ou vos besoins.
                     </p>
+
                 </article>
 
+
                 <article>
+
                     <h3>2. Trouvez la bonne personne</h3>
+
                     <p>
                         Recherchez un freelance ou découvrez des projets.
                     </p>
+
                 </article>
 
+
                 <article>
+
                     <h3>3. Lancez votre projet</h3>
+
                     <p>
                         Échangez et commencez votre collaboration.
                     </p>
+
                 </article>
 
             </div>
+
         </section>
 
 
-        <!-- Projets -->
+        <!-- =========================
+             PROJETS
+        ========================== -->
+
         <section>
+
             <h2>Projets disponibles</h2>
-            <label for="filtreCategorie">Filtrer les projets :</label>
 
-<select id="filtreCategorie">
-    <option value="tous">Tous les projets</option>
-    <option value="Développement web">Développement web</option>
-    <option value="Graphisme">Graphisme</option>
-    <option value="Rédaction">Rédaction</option>
-</select>
 
-            <div class="cards-grid" id="projetsGrid">
+            <!-- RECHERCHE -->
+
+            <label for="rechercheProjet">
+                Rechercher un projet :
+            </label>
+
+            <input
+                type="search"
+                id="rechercheProjet"
+                placeholder="Rechercher par titre..."
+            >
+
+
+            <!-- FILTRE PAR CATÉGORIE -->
+
+            <label for="filtreCategorie">
+                Filtrer les projets :
+            </label>
+
+            <select id="filtreCategorie">
+
+                <option value="tous">
+                    Tous les projets
+                </option>
+
+                <option value="Développement web">
+                    Développement web
+                </option>
+
+                <option value="Graphisme">
+                    Graphisme
+                </option>
+
+                <option value="Rédaction">
+                    Rédaction
+                </option>
+
+            </select>
+
+
+            <!-- CARTES DES PROJETS -->
+
+            <div
+                class="cards-grid"
+                id="projetsGrid"
+            >
 
                 <article>
-                    <h3>Créer un site vitrine</h3>
+
+                    <h3>
+                        Créer un site vitrine
+                    </h3>
+
                     <p>
                         Recherche d'un développeur pour créer
                         un site vitrine moderne.
                     </p>
+
+                    <p class="categorie-projet">
+                        Catégorie : Développement web
+                    </p>
+
                 </article>
 
+
                 <article>
-                    <h3>Créer une identité visuelle</h3>
+
+                    <h3>
+                        Créer une identité visuelle
+                    </h3>
+
                     <p>
                         Recherche d'un graphiste pour concevoir
                         un logo et une charte graphique.
                     </p>
+
+                    <p class="categorie-projet">
+                        Catégorie : Graphisme
+                    </p>
+
                 </article>
 
+
                 <article>
-                    <h3>Rédiger des contenus web</h3>
+
+                    <h3>
+                        Rédiger des contenus web
+                    </h3>
+
                     <p>
                         Recherche d'un rédacteur pour créer
                         des contenus adaptés au web.
                     </p>
+
+                    <p class="categorie-projet">
+                        Catégorie : Rédaction
+                    </p>
+
                 </article>
 
             </div>
 
-            <a href="#" class="project-link" id="publierProjet">
+
+            <!-- BOUTON PUBLIER -->
+
+            <a
+                href="#"
+                class="project-link"
+                id="publierProjet"
+            >
                 Publier un projet
             </a>
 
-            <!-- Formulaire de publication -->
+
+            <!-- =========================
+                 FORMULAIRE PROJET
+            ========================== -->
+
             <form id="formProjet" hidden>
+
+
+                <!-- TITRE -->
 
                 <label for="titreProjet">
                     Titre du projet
@@ -157,6 +288,8 @@
                 <p id="erreurTitre"></p>
 
 
+                <!-- DESCRIPTION -->
+
                 <label for="descriptionProjet">
                     Description
                 </label>
@@ -166,70 +299,139 @@
                 ></textarea>
 
                 <p id="erreurDescription"></p>
-                <label for="budgetProjet">Budget (€)</label>
-                <input type="number" id="budgetProjet" min="1">
+
+
+                <!-- BUDGET -->
+
+                <label for="budgetProjet">
+                    Budget (€)
+                </label>
+
+                <input
+                    type="number"
+                    id="budgetProjet"
+                    min="1"
+                >
+
                 <p id="erreurBudget"></p>
-<label for="categorieProjet">Catégorie</label>
 
-<select id="categorieProjet">
-    <option value="">Choisissez une catégorie</option>
-    <option value="Développement web">Développement web</option>
-    <option value="Graphisme">Graphisme</option>
-    <option value="Rédaction">Rédaction</option>
-</select>
 
-<p id="erreurCategorie"></p>
+                <!-- CATÉGORIE -->
+
+                <label for="categorieProjet">
+                    Catégorie
+                </label>
+
+                <select id="categorieProjet">
+
+                    <option value="">
+                        Choisissez une catégorie
+                    </option>
+
+                    <option value="Développement web">
+                        Développement web
+                    </option>
+
+                    <option value="Graphisme">
+                        Graphisme
+                    </option>
+
+                    <option value="Rédaction">
+                        Rédaction
+                    </option>
+
+                </select>
+
+                <p id="erreurCategorie"></p>
+
+
+                <!-- VALIDATION -->
 
                 <button type="submit">
                     Publier
                 </button>
-                
 
             </form>
 
+
+            <!-- MESSAGE PROJET -->
+
             <p id="messageProjet"></p>
+
         </section>
 
 
-        <!-- Freelances -->
+        <!-- =========================
+             FREELANCES
+        ========================== -->
+
         <section>
+
             <h2>Nos freelances</h2>
 
             <div class="cards-grid">
 
                 <article>
+
                     <h3>Aminata Diop</h3>
-                    <p>Développeuse web</p>
+
+                    <p>
+                        Développeuse web
+                    </p>
+
                     <p>
                         Compétences : HTML, CSS, JavaScript
                     </p>
+
                 </article>
 
+
                 <article>
+
                     <h3>Moussa Ndiaye</h3>
-                    <p>Graphiste</p>
+
+                    <p>
+                        Graphiste
+                    </p>
+
                     <p>
                         Compétences : Logo, identité visuelle, Photoshop
                     </p>
+
                 </article>
 
+
                 <article>
+
                     <h3>Fatou Sow</h3>
-                    <p>Rédactrice web</p>
+
+                    <p>
+                        Rédactrice web
+                    </p>
+
                     <p>
                         Compétences : Articles, SEO, communication
                     </p>
+
                 </article>
 
             </div>
+
         </section>
 
 
-        <!-- Contact -->
+        <!-- =========================
+             CONTACT
+        ========================== -->
+
         <section>
+
             <h2>Rejoignez KërTech Talent</h2>
 
             <form id="formContact">
+
+
+                <!-- NOM -->
 
                 <label for="nom">
                     Nom :
@@ -242,6 +444,8 @@
                 >
 
 
+                <!-- EMAIL -->
+
                 <label for="email">
                     Email :
                 </label>
@@ -253,6 +457,8 @@
                 >
 
 
+                <!-- MESSAGE -->
+
                 <label for="message">
                     Votre message :
                 </label>
@@ -263,29 +469,52 @@
                 ></textarea>
 
 
+                <!-- ENVOYER -->
+
                 <button type="submit">
                     Envoyer
                 </button>
 
+
+                <!-- MESSAGE DE VALIDATION -->
+
                 <p id="messageErreur"></p>
 
             </form>
+
         </section>
 
     </main>
 
 
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
     <footer>
+
         <p>
             &copy; 2026 KërTech Talent - Tous droits réservés.
         </p>
 
         <nav>
-            <a href="#">Mentions légales</a>
-            <a href="#">Contact</a>
+
+            <a href="#">
+                Mentions légales
+            </a>
+
+            <a href="#">
+                Contact
+            </a>
+
         </nav>
+
     </footer>
 
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
 
     <script src="script.js"></script>
 

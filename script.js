@@ -4,12 +4,14 @@ console.log("KërTech Talent : JavaScript connecté !");
 // SÉLECTION DES ÉLÉMENTS
 // =========================
 
+// Formulaire de contact
 const formulaire = document.getElementById("formContact");
 const nom = document.querySelector("#nom");
 const email = document.querySelector("#email");
 const message = document.querySelector("#message");
 const messageErreur = document.querySelector("#messageErreur");
 
+// Formulaire de projet
 const publierProjet = document.querySelector("#publierProjet");
 const titreProjet = document.querySelector("#titreProjet");
 const descriptionProjet = document.querySelector("#descriptionProjet");
@@ -20,12 +22,15 @@ const projetsGrid = document.getElementById("projetsGrid");
 const formProjet = document.querySelector("#formProjet");
 const messageProjet = document.querySelector("#messageProjet");
 
+// Messages d'erreur
 const erreurTitre = document.querySelector("#erreurTitre");
 const erreurDescription = document.querySelector("#erreurDescription");
 const erreurBudget = document.querySelector("#erreurBudget");
 const erreurCategorie = document.querySelector("#erreurCategorie");
 
+// Recherche et filtre
 const filtreCategorie = document.querySelector("#filtreCategorie");
+const rechercheProjet = document.querySelector("#rechercheProjet");
 
 
 // =========================
@@ -39,6 +44,7 @@ formulaire.addEventListener("submit", function(event) {
     const emailUtilisateur = email.value;
     const messageUtilisateur = message.value;
 
+    // Validation du nom
     if (nomUtilisateur.trim() === "") {
         messageErreur.textContent = "Veuillez saisir votre nom.";
         messageErreur.classList.remove("succes");
@@ -46,6 +52,7 @@ formulaire.addEventListener("submit", function(event) {
         return;
     }
 
+    // Validation de l'email
     if (emailUtilisateur.trim() === "") {
         messageErreur.textContent = "Veuillez saisir votre email.";
         messageErreur.classList.remove("succes");
@@ -53,6 +60,7 @@ formulaire.addEventListener("submit", function(event) {
         return;
     }
 
+    // Validation du message
     if (messageUtilisateur.trim() === "") {
         messageErreur.textContent = "Veuillez saisir votre message.";
         messageErreur.classList.remove("succes");
@@ -60,6 +68,7 @@ formulaire.addEventListener("submit", function(event) {
         return;
     }
 
+    // Vérification simple de l'adresse email
     if (!emailUtilisateur.includes("@")) {
         messageErreur.textContent = "Veuillez saisir une adresse email valide.";
         messageErreur.classList.remove("succes");
@@ -67,6 +76,7 @@ formulaire.addEventListener("submit", function(event) {
         return;
     }
 
+    // Message de succès
     messageErreur.classList.remove("erreur");
     messageErreur.classList.add("succes");
     messageErreur.textContent = "Votre message a bien été envoyé !";
@@ -83,6 +93,8 @@ publierProjet.addEventListener("click", function(event) {
     event.preventDefault();
 
     formProjet.hidden = false;
+
+    // Efface l'ancien message
     messageProjet.textContent = "";
 });
 
@@ -101,7 +113,7 @@ formProjet.addEventListener("submit", function(event) {
 
     let formulaireValide = true;
 
-    // Effacement des anciennes erreurs
+    // Effacement des anciens messages d'erreur
     erreurTitre.textContent = "";
     erreurDescription.textContent = "";
     erreurBudget.textContent = "";
@@ -135,90 +147,188 @@ formProjet.addEventListener("submit", function(event) {
         formulaireValide = false;
     }
 
-    // Arrêt si au moins une erreur existe
+    // Arrêt si le formulaire contient une erreur
     if (formulaireValide === false) {
         return;
     }
 
-    // Création de la carte
+
+    // =========================
+    // CRÉATION DE LA CARTE
+    // =========================
+
     const nouvelleCarte = document.createElement("article");
 
+    // Titre
     const nouveauTitre = document.createElement("h3");
     nouveauTitre.textContent = titre;
 
+    // Description
     const nouvelleDescription = document.createElement("p");
     nouvelleDescription.textContent = description;
 
+    // Budget
     const nouveauBudget = document.createElement("p");
     nouveauBudget.textContent = "Budget : " + budget + " €";
 
+    // Catégorie
     const nouvelleCategorie = document.createElement("p");
     nouvelleCategorie.textContent = "Catégorie : " + categorie;
     nouvelleCategorie.classList.add("categorie-projet");
 
-    // Ajout des informations dans la carte
+
+    // =========================
+    // AJOUT DANS LA CARTE
+    // =========================
+
     nouvelleCarte.appendChild(nouveauTitre);
     nouvelleCarte.appendChild(nouvelleDescription);
     nouvelleCarte.appendChild(nouveauBudget);
     nouvelleCarte.appendChild(nouvelleCategorie);
 
-    // Création du bouton Supprimer
+
+    // =========================
+    // BOUTON SUPPRIMER
+    // =========================
+
     const boutonSupprimer = document.createElement("button");
+
     boutonSupprimer.textContent = "Supprimer";
     boutonSupprimer.classList.add("btn-supprimer");
 
-    // Suppression avec confirmation
     boutonSupprimer.addEventListener("click", function() {
+
         const confirmation = confirm(
             "Voulez-vous vraiment supprimer ce projet ?"
         );
 
         if (confirmation) {
             nouvelleCarte.remove();
-            messageProjet.textContent = "Le projet a bien été supprimé.";
+
+            messageProjet.textContent =
+                "Le projet a bien été supprimé.";
+
+            messageProjet.classList.add("succes");
         }
     });
 
     nouvelleCarte.appendChild(boutonSupprimer);
 
-    // Ajout de la carte dans la grille
+
+    // =========================
+    // AJOUT DU PROJET
+    // =========================
+
     projetsGrid.appendChild(nouvelleCarte);
 
-    // Réinitialisation
+    // Réinitialisation du formulaire
     formProjet.reset();
+
+    // Masquage du formulaire
     formProjet.hidden = true;
 
-    messageProjet.textContent = "Votre projet a bien été publié !";
+    // Message de succès
+    messageProjet.textContent =
+        "Votre projet a bien été publié !";
+
     messageProjet.classList.add("succes");
+
+    // Applique immédiatement la recherche
+    // et la catégorie actuellement sélectionnées
+    filtrerProjets();
 });
 
 
 // =========================
-// FILTRE PAR CATÉGORIE
+// RECHERCHE + FILTRE
 // =========================
 
-filtreCategorie.addEventListener("change", function() {
-    const categorieChoisie = filtreCategorie.value;
-    const cartesProjets = projetsGrid.querySelectorAll("article");
+function filtrerProjets() {
 
+    // Texte tapé dans la recherche
+    const texteRecherche =
+        rechercheProjet.value.toLowerCase();
+
+    // Catégorie choisie
+    const categorieChoisie =
+        filtreCategorie.value;
+
+    // Toutes les cartes
+    const cartesProjets =
+        projetsGrid.querySelectorAll("article");
+
+
+    // Parcours de chaque carte
     cartesProjets.forEach(function(carte) {
-        const categorieCarte = carte.querySelector(".categorie-projet");
 
-        // Les anciennes cartes HTML n'ont pas encore de catégorie
-        if (categorieCarte === null) {
+        // Récupération du titre
+        const titreElement =
+            carte.querySelector("h3");
+
+        // Récupération de la catégorie
+        const categorieCarte =
+            carte.querySelector(".categorie-projet");
+
+
+        // Sécurité si une carte n'a pas
+        // les éléments nécessaires
+        if (
+            titreElement === null ||
+            categorieCarte === null
+        ) {
             return;
         }
 
-        const categorieCarteTexte =
-            categorieCarte.textContent.replace("Catégorie : ", "");
 
-        if (
+        // Texte du titre en minuscules
+        const titreCarte =
+            titreElement.textContent.toLowerCase();
+
+
+        // Récupération du nom de la catégorie
+        const categorieCarteTexte =
+            categorieCarte.textContent.replace(
+                "Catégorie : ",
+                ""
+            );
+
+
+        // Vérifie la recherche
+        const correspondRecherche =
+            titreCarte.includes(texteRecherche);
+
+
+        // Vérifie la catégorie
+        const correspondCategorie =
             categorieChoisie === "tous" ||
-            categorieChoisie === categorieCarteTexte
+            categorieChoisie === categorieCarteTexte;
+
+
+        // Les DEUX conditions doivent être vraies
+        if (
+            correspondRecherche &&
+            correspondCategorie
         ) {
             carte.style.display = "";
         } else {
             carte.style.display = "none";
         }
     });
-});
+}
+
+
+// =========================
+// ÉVÉNEMENTS RECHERCHE + FILTRE
+// =========================
+
+// Recherche pendant la saisie
+rechercheProjet.addEventListener(
+    "input",
+    filtrerProjets
+);
+
+// Filtre lors du changement de catégorie
+filtreCategorie.addEventListener(
+    "change",
+    filtrerProjets
+);
