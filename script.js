@@ -31,7 +31,7 @@ const erreurCategorie = document.querySelector("#erreurCategorie");
 // Recherche et filtre
 const filtreCategorie = document.querySelector("#filtreCategorie");
 const rechercheProjet = document.querySelector("#rechercheProjet");
-
+const aucunProjet = document.querySelector("#aucunProjet");
 
 // =========================
 // FORMULAIRE DE CONTACT
@@ -239,39 +239,28 @@ formProjet.addEventListener("submit", function(event) {
 });
 
 
-// =========================
-// RECHERCHE + FILTRE
-// =========================
-
 function filtrerProjets() {
 
-    // Texte tapé dans la recherche
     const texteRecherche =
         rechercheProjet.value.toLowerCase();
 
-    // Catégorie choisie
     const categorieChoisie =
         filtreCategorie.value;
 
-    // Toutes les cartes
     const cartesProjets =
         projetsGrid.querySelectorAll("article");
 
+    // Compteur des cartes visibles
+    let nombreProjetsVisibles = 0;
 
-    // Parcours de chaque carte
     cartesProjets.forEach(function(carte) {
 
-        // Récupération du titre
         const titreElement =
             carte.querySelector("h3");
 
-        // Récupération de la catégorie
         const categorieCarte =
             carte.querySelector(".categorie-projet");
 
-
-        // Sécurité si une carte n'a pas
-        // les éléments nécessaires
         if (
             titreElement === null ||
             categorieCarte === null
@@ -279,47 +268,42 @@ function filtrerProjets() {
             return;
         }
 
-
-        // Texte du titre en minuscules
         const titreCarte =
             titreElement.textContent.toLowerCase();
 
-
-        // Récupération du nom de la catégorie
         const categorieCarteTexte =
             categorieCarte.textContent.replace(
                 "Catégorie : ",
                 ""
             );
 
-
-        // Vérifie la recherche
         const correspondRecherche =
             titreCarte.includes(texteRecherche);
 
-
-        // Vérifie la catégorie
         const correspondCategorie =
             categorieChoisie === "tous" ||
             categorieChoisie === categorieCarteTexte;
 
-
-        // Les DEUX conditions doivent être vraies
         if (
             correspondRecherche &&
             correspondCategorie
         ) {
             carte.style.display = "";
+
+            // Une carte correspond
+            nombreProjetsVisibles++;
         } else {
             carte.style.display = "none";
         }
     });
+
+    // Affichage du message si aucune carte ne correspond
+    if (nombreProjetsVisibles === 0) {
+        aucunProjet.hidden = false;
+    } else {
+        aucunProjet.hidden = true;
+    }
 }
-
-
-// =========================
-// ÉVÉNEMENTS RECHERCHE + FILTRE
-// =========================
 
 // Recherche pendant la saisie
 rechercheProjet.addEventListener(
