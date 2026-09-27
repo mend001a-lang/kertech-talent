@@ -91,6 +91,14 @@ form button {
 form button:hover {
     transform: translateY(-2px);
 }
+#formProjet:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#formProjet p {
+    margin: 0 0 8px;
+}
 footer {
     background-color: #1F2937;
     color: white;
@@ -166,4 +174,20 @@ footer nav a {
 
 .btn-supprimer:hover {
     background-color: #b91c1c;
+}
+.project-link {
+    display: inline-block;
+    background-color: #00d68f;
+    color: #111827;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    transition: 0.3s;
+}
+
+.project-link:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
