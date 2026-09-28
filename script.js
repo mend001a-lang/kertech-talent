@@ -33,6 +33,106 @@ const filtreCategorie = document.querySelector("#filtreCategorie");
 const rechercheProjet = document.querySelector("#rechercheProjet");
 const aucunProjet = document.querySelector("#aucunProjet");
 
+let projetsSauvegardes =
+    JSON.parse(localStorage.getItem("projets")) || [];
+
+    // =========================
+// CHARGEMENT DES PROJETS SAUVEGARDÉS
+// =========================
+
+function afficherProjetSauvegarde(projet) {
+
+    // Création de la carte
+    const nouvelleCarte = document.createElement("article");
+
+    // Titre
+    const nouveauTitre = document.createElement("h3");
+    nouveauTitre.textContent = projet.titre;
+
+    // Description
+    const nouvelleDescription = document.createElement("p");
+    nouvelleDescription.textContent = projet.description;
+
+    // Budget
+    const nouveauBudget = document.createElement("p");
+    nouveauBudget.textContent =
+        "Budget : " + projet.budget + " €";
+
+    // Catégorie
+    const nouvelleCategorie = document.createElement("p");
+    nouvelleCategorie.textContent =
+        "Catégorie : " + projet.categorie;
+
+    nouvelleCategorie.classList.add("categorie-projet");
+
+
+    // Ajout des informations dans la carte
+    nouvelleCarte.appendChild(nouveauTitre);
+    nouvelleCarte.appendChild(nouvelleDescription);
+    nouvelleCarte.appendChild(nouveauBudget);
+    nouvelleCarte.appendChild(nouvelleCategorie);
+
+
+    // =========================
+    // BOUTON SUPPRIMER
+    // =========================
+
+    const boutonSupprimer = document.createElement("button");
+
+    boutonSupprimer.textContent = "Supprimer";
+    boutonSupprimer.classList.add("btn-supprimer");
+
+
+    boutonSupprimer.addEventListener("click", function() {
+
+        const confirmation = confirm(
+            "Voulez-vous vraiment supprimer ce projet ?"
+        );
+
+        if (confirmation) {
+
+            // Supprime le projet du tableau
+            projetsSauvegardes = projetsSauvegardes.filter(
+                function(projetSauvegarde) {
+                    return projetSauvegarde.id !== projet.id;
+                }
+            );
+
+            // Met à jour localStorage
+            localStorage.setItem(
+                "projets",
+                JSON.stringify(projetsSauvegardes)
+            );
+
+            // Supprime la carte de la page
+            nouvelleCarte.remove();
+
+            // Message de confirmation
+            messageProjet.textContent =
+                "Le projet a bien été supprimé.";
+
+            messageProjet.classList.add("succes");
+
+            // Recalcule recherche + filtre
+            filtrerProjets();
+        }
+    });
+
+
+    // Ajout du bouton à la carte
+    nouvelleCarte.appendChild(boutonSupprimer);
+
+
+    // Ajout de la carte dans la grille
+    projetsGrid.appendChild(nouvelleCarte);
+}
+
+
+// Recréation des projets enregistrés
+projetsSauvegardes.forEach(function(projet) {
+    afficherProjetSauvegarde(projet);
+});
+
 // =========================
 // FORMULAIRE DE CONTACT
 // =========================
@@ -151,6 +251,18 @@ formProjet.addEventListener("submit", function(event) {
     if (formulaireValide === false) {
         return;
     }
+   const projet = {
+    id: Date.now(),
+    titre: titre,
+    description: description,
+    budget: budget,
+    categorie: categorie
+};
+projetsSauvegardes.push(projet);
+localStorage.setItem(
+    "projets",
+    JSON.stringify(projetsSauvegardes)
+);
 
 
     // =========================
@@ -202,14 +314,27 @@ formProjet.addEventListener("submit", function(event) {
             "Voulez-vous vraiment supprimer ce projet ?"
         );
 
-        if (confirmation) {
-            nouvelleCarte.remove();
+       if (confirmation) {
 
-            messageProjet.textContent =
-                "Le projet a bien été supprimé.";
+    // Supprime le projet du tableau
+    projetsSauvegardes = projetsSauvegardes.filter(function(projetSauvegarde) {
+        return projetSauvegarde.id !== projet.id;
+    });
 
-            messageProjet.classList.add("succes");
-        }
+    // Met à jour le localStorage
+    localStorage.setItem(
+        "projets",
+        JSON.stringify(projetsSauvegardes)
+    );
+
+    // Supprime la carte de la page
+    nouvelleCarte.remove();
+
+    messageProjet.textContent =
+        "Le projet a bien été supprimé.";
+
+    messageProjet.classList.add("succes");
+}
     });
 
     nouvelleCarte.appendChild(boutonSupprimer);
