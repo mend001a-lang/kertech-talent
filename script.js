@@ -32,6 +32,7 @@ const erreurCategorie = document.querySelector("#erreurCategorie");
 const filtreCategorie = document.querySelector("#filtreCategorie");
 const rechercheProjet = document.querySelector("#rechercheProjet");
 const aucunProjet = document.querySelector("#aucunProjet");
+const compteurProjets = document.querySelector("#compteurProjets");
 
 let projetsSauvegardes =
     JSON.parse(localStorage.getItem("projets")) || [];
@@ -423,6 +424,10 @@ function filtrerProjets() {
     });
 
     // Affichage du message si aucune carte ne correspond
+compteurProjets.textContent =
+    nombreProjetsVisibles === 1
+        ? "1 projet trouvé"
+        : nombreProjetsVisibles + " projets trouvés";
     if (nombreProjetsVisibles === 0) {
         aucunProjet.hidden = false;
     } else {
