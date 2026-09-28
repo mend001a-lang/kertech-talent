@@ -4,12 +4,15 @@ console.log("KërTech Talent : JavaScript connecté !");
 // SÉLECTION DES ÉLÉMENTS
 // =========================
 
+
+
 // Formulaire de contact
 const formulaire = document.getElementById("formContact");
 const nom = document.querySelector("#nom");
 const email = document.querySelector("#email");
 const message = document.querySelector("#message");
 const messageErreur = document.querySelector("#messageErreur");
+const boutonProfil = document.querySelector(".voir-profil");
 
 // Formulaire de projet
 const publierProjet = document.querySelector("#publierProjet");
@@ -33,9 +36,30 @@ const filtreCategorie = document.querySelector("#filtreCategorie");
 const rechercheProjet = document.querySelector("#rechercheProjet");
 const aucunProjet = document.querySelector("#aucunProjet");
 const compteurProjets = document.querySelector("#compteurProjets");
+const detailsProfil = document.querySelector(".details-profil");
+const boutonsProfil = document.querySelectorAll(".voir-profil");
+
+
+
 
 let projetsSauvegardes =
     JSON.parse(localStorage.getItem("projets")) || [];
+
+ boutonsProfil.forEach(function(bouton) {
+
+    bouton.addEventListener("click", function() {
+
+        const carteFreelance = bouton.closest("article");
+        const details = carteFreelance.querySelector(".details-profil");
+
+        details.hidden = !details.hidden;
+
+        bouton.textContent =
+            details.hidden ? "Voir le profil" : "Masquer le profil";
+
+    });
+
+});
 
     // =========================
 // CHARGEMENT DES PROJETS SAUVEGARDÉS
