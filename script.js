@@ -36,7 +36,7 @@ const filtreCategorie = document.querySelector("#filtreCategorie");
 const rechercheProjet = document.querySelector("#rechercheProjet");
 const aucunProjet = document.querySelector("#aucunProjet");
 const compteurProjets = document.querySelector("#compteurProjets");
-const detailsProfil = document.querySelector(".details-profil");
+
 const boutonsProfil = document.querySelectorAll(".voir-profil");
 
 
