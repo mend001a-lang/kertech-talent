@@ -1,10 +1,9 @@
 console.log("KërTech Talent : JavaScript connecté !");
 
-// =========================
+
+// ==================================================
 // SÉLECTION DES ÉLÉMENTS
-// =========================
-
-
+// ==================================================
 
 // Formulaire de contact
 const formulaire = document.getElementById("formContact");
@@ -12,7 +11,6 @@ const nom = document.querySelector("#nom");
 const email = document.querySelector("#email");
 const message = document.querySelector("#message");
 const messageErreur = document.querySelector("#messageErreur");
-const boutonProfil = document.querySelector(".voir-profil");
 
 // Formulaire de projet
 const publierProjet = document.querySelector("#publierProjet");
@@ -25,448 +23,967 @@ const projetsGrid = document.getElementById("projetsGrid");
 const formProjet = document.querySelector("#formProjet");
 const messageProjet = document.querySelector("#messageProjet");
 
-// Messages d'erreur
+// Messages d'erreur projet
 const erreurTitre = document.querySelector("#erreurTitre");
 const erreurDescription = document.querySelector("#erreurDescription");
 const erreurBudget = document.querySelector("#erreurBudget");
 const erreurCategorie = document.querySelector("#erreurCategorie");
 
-// Recherche et filtre
+// Recherche et filtre projets
 const filtreCategorie = document.querySelector("#filtreCategorie");
 const rechercheProjet = document.querySelector("#rechercheProjet");
 const aucunProjet = document.querySelector("#aucunProjet");
 const compteurProjets = document.querySelector("#compteurProjets");
 
+// Freelances
 const boutonsProfil = document.querySelectorAll(".voir-profil");
+const rechercheFreelance = document.querySelector("#rechercheFreelance");
+const freelancesGrid = document.getElementById("freelancesGrid");
+const cartesFreelances = freelancesGrid.querySelectorAll("article");
+const aucunFreelance = document.querySelector("#aucunFreelance");
+const compteurFreelances = document.querySelector("#compteurFreelances");
+const boutonsContacter =
+    document.querySelectorAll(".contacter-freelance");
 
 
-
+// ==================================================
+// LOCALSTORAGE
+// ==================================================
 
 let projetsSauvegardes =
     JSON.parse(localStorage.getItem("projets")) || [];
 
- boutonsProfil.forEach(function(bouton) {
+
+// ==================================================
+// PROFILS DES FREELANCES
+// ==================================================
+
+boutonsProfil.forEach(function(bouton) {
 
     bouton.addEventListener("click", function() {
 
-        const carteFreelance = bouton.closest("article");
-        const details = carteFreelance.querySelector(".details-profil");
+        const carteFreelance =
+            bouton.closest("article");
+
+        const details =
+            carteFreelance.querySelector(".details-profil");
 
         details.hidden = !details.hidden;
 
         bouton.textContent =
-            details.hidden ? "Voir le profil" : "Masquer le profil";
-
+            details.hidden
+                ? "Voir le profil"
+                : "Masquer le profil";
     });
 
 });
 
-    // =========================
-// CHARGEMENT DES PROJETS SAUVEGARDÉS
-// =========================
 
-function afficherProjetSauvegarde(projet) {
+// ==================================================
+// CONTACT DES FREELANCES
+// ==================================================
 
-    // Création de la carte
-    const nouvelleCarte = document.createElement("article");
+boutonsContacter.forEach(function(bouton) {
 
-    // Titre
-    const nouveauTitre = document.createElement("h3");
-    nouveauTitre.textContent = projet.titre;
+    const carteFreelance =
+        bouton.closest("article");
 
-    // Description
-    const nouvelleDescription = document.createElement("p");
-    nouvelleDescription.textContent = projet.description;
-
-    // Budget
-    const nouveauBudget = document.createElement("p");
-    nouveauBudget.textContent =
-        "Budget : " + projet.budget + " €";
-
-    // Catégorie
-    const nouvelleCategorie = document.createElement("p");
-    nouvelleCategorie.textContent =
-        "Catégorie : " + projet.categorie;
-
-    nouvelleCategorie.classList.add("categorie-projet");
-
-
-    // Ajout des informations dans la carte
-    nouvelleCarte.appendChild(nouveauTitre);
-    nouvelleCarte.appendChild(nouvelleDescription);
-    nouvelleCarte.appendChild(nouveauBudget);
-    nouvelleCarte.appendChild(nouvelleCategorie);
-
-
-    // =========================
-    // BOUTON SUPPRIMER
-    // =========================
-
-    const boutonSupprimer = document.createElement("button");
-
-    boutonSupprimer.textContent = "Supprimer";
-    boutonSupprimer.classList.add("btn-supprimer");
-
-
-    boutonSupprimer.addEventListener("click", function() {
-
-        const confirmation = confirm(
-            "Voulez-vous vraiment supprimer ce projet ?"
+    const formulaireContact =
+        carteFreelance.querySelector(
+            ".form-contact-freelance"
         );
 
-        if (confirmation) {
+    const envoyerMessage =
+        carteFreelance.querySelector(
+            ".envoyer-message"
+        );
 
-            // Supprime le projet du tableau
-            projetsSauvegardes = projetsSauvegardes.filter(
-                function(projetSauvegarde) {
-                    return projetSauvegarde.id !== projet.id;
-                }
-            );
+    const messageFreelance =
+        carteFreelance.querySelector(
+            ".message-freelance"
+        );
 
-            // Met à jour localStorage
-            localStorage.setItem(
-                "projets",
-                JSON.stringify(projetsSauvegardes)
-            );
+    const messageSucces =
+        carteFreelance.querySelector(
+            ".message-succes-freelance"
+        );
 
-            // Supprime la carte de la page
-            nouvelleCarte.remove();
 
-            // Message de confirmation
-            messageProjet.textContent =
-                "Le projet a bien été supprimé.";
+    // Ouvrir / fermer
+    bouton.addEventListener("click", function() {
 
-            messageProjet.classList.add("succes");
+        formulaireContact.hidden =
+            !formulaireContact.hidden;
 
-            // Recalcule recherche + filtre
-            filtrerProjets();
-        }
+        bouton.textContent =
+            formulaireContact.hidden
+                ? "Contacter"
+                : "Fermer";
     });
 
 
-    // Ajout du bouton à la carte
-    nouvelleCarte.appendChild(boutonSupprimer);
+    // Effacer l'ancien succès
+    messageFreelance.addEventListener(
+        "input",
+        function() {
+
+            messageSucces.textContent = "";
+
+        }
+    );
 
 
-    // Ajout de la carte dans la grille
-    projetsGrid.appendChild(nouvelleCarte);
+    // Envoyer le message
+    envoyerMessage.addEventListener(
+        "click",
+        function() {
+
+            const messageUtilisateur =
+                messageFreelance.value.trim();
+
+            if (messageUtilisateur === "") {
+
+                alert("Veuillez écrire un message.");
+                return;
+            }
+
+            const nomFreelance =
+                carteFreelance
+                    .querySelector("h3")
+                    .textContent;
+
+            messageSucces.textContent =
+                "Message envoyé à "
+                + nomFreelance
+                + " !";
+
+            messageFreelance.value = "";
+        }
+    );
+
+});
+
+
+// ==================================================
+// RECHERCHE DES FREELANCES
+// ==================================================
+
+function filtrerFreelances() {
+
+    const texteRecherche =
+        rechercheFreelance.value
+            .toLowerCase()
+            .trim();
+
+    let nombreFreelancesVisibles = 0;
+
+    cartesFreelances.forEach(function(carte) {
+
+        const nomFreelance =
+            carte.querySelector("h3")
+                .textContent
+                .toLowerCase();
+
+        const paragraphes =
+            carte.querySelectorAll("p");
+
+        const competencesFreelance =
+            paragraphes[1]
+                .textContent
+                .toLowerCase();
+
+        const correspondRecherche =
+            nomFreelance.includes(texteRecherche) ||
+            competencesFreelance.includes(
+                texteRecherche
+            );
+
+        if (correspondRecherche) {
+
+            carte.style.display = "";
+            nombreFreelancesVisibles++;
+
+        } else {
+
+            carte.style.display = "none";
+
+        }
+
+    });
+
+
+    compteurFreelances.textContent =
+        nombreFreelancesVisibles === 1
+            ? "1 freelance trouvé"
+            : nombreFreelancesVisibles
+                + " freelances trouvés";
+
+
+    aucunFreelance.hidden =
+        nombreFreelancesVisibles !== 0;
 }
 
 
-// Recréation des projets enregistrés
-projetsSauvegardes.forEach(function(projet) {
-    afficherProjetSauvegarde(projet);
-});
-
-// =========================
-// FORMULAIRE DE CONTACT
-// =========================
-
-formulaire.addEventListener("submit", function(event) {
-    event.preventDefault();
-
-    const nomUtilisateur = nom.value;
-    const emailUtilisateur = email.value;
-    const messageUtilisateur = message.value;
-
-    // Validation du nom
-    if (nomUtilisateur.trim() === "") {
-        messageErreur.textContent = "Veuillez saisir votre nom.";
-        messageErreur.classList.remove("succes");
-        messageErreur.classList.add("erreur");
-        return;
-    }
-
-    // Validation de l'email
-    if (emailUtilisateur.trim() === "") {
-        messageErreur.textContent = "Veuillez saisir votre email.";
-        messageErreur.classList.remove("succes");
-        messageErreur.classList.add("erreur");
-        return;
-    }
-
-    // Validation du message
-    if (messageUtilisateur.trim() === "") {
-        messageErreur.textContent = "Veuillez saisir votre message.";
-        messageErreur.classList.remove("succes");
-        messageErreur.classList.add("erreur");
-        return;
-    }
-
-    // Vérification simple de l'adresse email
-    if (!emailUtilisateur.includes("@")) {
-        messageErreur.textContent = "Veuillez saisir une adresse email valide.";
-        messageErreur.classList.remove("succes");
-        messageErreur.classList.add("erreur");
-        return;
-    }
-
-    // Message de succès
-    messageErreur.classList.remove("erreur");
-    messageErreur.classList.add("succes");
-    messageErreur.textContent = "Votre message a bien été envoyé !";
-
-    formulaire.reset();
-});
-
-
-// =========================
-// OUVERTURE DU FORMULAIRE PROJET
-// =========================
-
-publierProjet.addEventListener("click", function(event) {
-    event.preventDefault();
-
-    formProjet.hidden = false;
-
-    // Efface l'ancien message
-    messageProjet.textContent = "";
-});
-
-
-// =========================
-// PUBLICATION D'UN PROJET
-// =========================
-
-formProjet.addEventListener("submit", function(event) {
-    event.preventDefault();
-
-    const titre = titreProjet.value;
-    const description = descriptionProjet.value;
-    const budget = budgetProjet.value;
-    const categorie = categorieProjet.value;
-
-    let formulaireValide = true;
-
-    // Effacement des anciens messages d'erreur
-    erreurTitre.textContent = "";
-    erreurDescription.textContent = "";
-    erreurBudget.textContent = "";
-    erreurCategorie.textContent = "";
-
-    // Validation du titre
-    if (titre.trim() === "") {
-        erreurTitre.textContent = "Veuillez saisir un titre.";
-        erreurTitre.classList.add("erreur");
-        formulaireValide = false;
-    }
-
-    // Validation de la description
-    if (description.trim() === "") {
-        erreurDescription.textContent = "Veuillez saisir une description.";
-        erreurDescription.classList.add("erreur");
-        formulaireValide = false;
-    }
-
-    // Validation du budget
-    if (budget === "" || budget < 1) {
-        erreurBudget.textContent = "Veuillez saisir un budget valide.";
-        erreurBudget.classList.add("erreur");
-        formulaireValide = false;
-    }
-
-    // Validation de la catégorie
-    if (categorie === "") {
-        erreurCategorie.textContent = "Veuillez choisir une catégorie.";
-        erreurCategorie.classList.add("erreur");
-        formulaireValide = false;
-    }
-
-    // Arrêt si le formulaire contient une erreur
-    if (formulaireValide === false) {
-        return;
-    }
-   const projet = {
-    id: Date.now(),
-    titre: titre,
-    description: description,
-    budget: budget,
-    categorie: categorie
-};
-projetsSauvegardes.push(projet);
-localStorage.setItem(
-    "projets",
-    JSON.stringify(projetsSauvegardes)
+rechercheFreelance.addEventListener(
+    "input",
+    filtrerFreelances
 );
 
 
-    // =========================
-    // CRÉATION DE LA CARTE
-    // =========================
+// ==================================================
+// CANDIDATURE AUX PROJETS
+// ==================================================
 
-    const nouvelleCarte = document.createElement("article");
+function activerCandidature(carteProjet) {
 
-    // Titre
-    const nouveauTitre = document.createElement("h3");
-    nouveauTitre.textContent = titre;
-
-    // Description
-    const nouvelleDescription = document.createElement("p");
-    nouvelleDescription.textContent = description;
-
-    // Budget
-    const nouveauBudget = document.createElement("p");
-    nouveauBudget.textContent = "Budget : " + budget + " €";
-
-    // Catégorie
-    const nouvelleCategorie = document.createElement("p");
-    nouvelleCategorie.textContent = "Catégorie : " + categorie;
-    nouvelleCategorie.classList.add("categorie-projet");
-
-
-    // =========================
-    // AJOUT DANS LA CARTE
-    // =========================
-
-    nouvelleCarte.appendChild(nouveauTitre);
-    nouvelleCarte.appendChild(nouvelleDescription);
-    nouvelleCarte.appendChild(nouveauBudget);
-    nouvelleCarte.appendChild(nouvelleCategorie);
-
-
-    // =========================
-    // BOUTON SUPPRIMER
-    // =========================
-
-    const boutonSupprimer = document.createElement("button");
-
-    boutonSupprimer.textContent = "Supprimer";
-    boutonSupprimer.classList.add("btn-supprimer");
-
-    boutonSupprimer.addEventListener("click", function() {
-
-        const confirmation = confirm(
-            "Voulez-vous vraiment supprimer ce projet ?"
+    const bouton =
+        carteProjet.querySelector(
+            ".postuler-projet"
         );
 
-       if (confirmation) {
+    const formulaireCandidature =
+        carteProjet.querySelector(
+            ".form-candidature"
+        );
 
-    // Supprime le projet du tableau
-    projetsSauvegardes = projetsSauvegardes.filter(function(projetSauvegarde) {
-        return projetSauvegarde.id !== projet.id;
-    });
+    const messageCandidature =
+        carteProjet.querySelector(
+            ".message-candidature"
+        );
 
-    // Met à jour le localStorage
-    localStorage.setItem(
-        "projets",
-        JSON.stringify(projetsSauvegardes)
+    const envoyerCandidature =
+        carteProjet.querySelector(
+            ".envoyer-candidature"
+        );
+
+    const messageSuccesCandidature =
+        carteProjet.querySelector(
+            ".message-succes-candidature"
+        );
+
+
+    // Sécurité
+    if (
+        bouton === null ||
+        formulaireCandidature === null ||
+        messageCandidature === null ||
+        envoyerCandidature === null ||
+        messageSuccesCandidature === null
+    ) {
+        return;
+    }
+
+
+    // Ouvrir / fermer
+    bouton.addEventListener(
+        "click",
+        function() {
+
+            formulaireCandidature.hidden =
+                !formulaireCandidature.hidden;
+
+            bouton.textContent =
+                formulaireCandidature.hidden
+                    ? "Postuler"
+                    : "Fermer";
+        }
     );
 
-    // Supprime la carte de la page
-    nouvelleCarte.remove();
 
-    messageProjet.textContent =
-        "Le projet a bien été supprimé.";
+    // Effacer l'ancien succès
+    messageCandidature.addEventListener(
+        "input",
+        function() {
 
-    messageProjet.classList.add("succes");
+            messageSuccesCandidature.textContent =
+                "";
+
+        }
+    );
+
+
+    // Envoyer candidature
+    envoyerCandidature.addEventListener(
+        "click",
+        function() {
+
+            const messageUtilisateur =
+                messageCandidature.value.trim();
+
+            if (messageUtilisateur === "") {
+
+                alert(
+                    "Veuillez écrire un message de candidature."
+                );
+
+                return;
+            }
+
+            const titre =
+                carteProjet
+                    .querySelector("h3")
+                    .textContent;
+
+            messageSuccesCandidature.textContent =
+                "Candidature envoyée pour le projet : "
+                + titre
+                + " !";
+
+            messageCandidature.value = "";
+        }
+    );
+
 }
+
+
+// ==================================================
+// AJOUT DU BOUTON POSTULER À UNE CARTE DYNAMIQUE
+// ==================================================
+
+function ajouterCandidature(carteProjet) {
+
+    const boutonPostuler =
+        document.createElement("button");
+
+    boutonPostuler.textContent = "Postuler";
+
+    boutonPostuler.classList.add(
+        "postuler-projet"
+    );
+
+
+    const formulaireCandidature =
+        document.createElement("div");
+
+    formulaireCandidature.classList.add(
+        "form-candidature"
+    );
+
+    formulaireCandidature.hidden = true;
+
+
+    formulaireCandidature.innerHTML = `
+        <textarea
+            class="message-candidature"
+            placeholder="Présentez votre candidature..."
+        ></textarea>
+
+        <button class="envoyer-candidature">
+            Envoyer ma candidature
+        </button>
+
+        <p class="message-succes-candidature"></p>
+    `;
+
+
+    carteProjet.appendChild(
+        boutonPostuler
+    );
+
+    carteProjet.appendChild(
+        formulaireCandidature
+    );
+
+
+    activerCandidature(carteProjet);
+}
+
+
+// ==================================================
+// SUPPRESSION D'UN PROJET SAUVEGARDÉ
+// ==================================================
+
+function ajouterSuppression(
+    carteProjet,
+    projet
+) {
+
+    const boutonSupprimer =
+        document.createElement("button");
+
+    boutonSupprimer.textContent =
+        "Supprimer";
+
+    boutonSupprimer.classList.add(
+        "btn-supprimer"
+    );
+
+
+    boutonSupprimer.addEventListener(
+        "click",
+        function() {
+
+            const confirmation =
+                confirm(
+                    "Voulez-vous vraiment supprimer ce projet ?"
+                );
+
+            if (!confirmation) {
+                return;
+            }
+
+
+            projetsSauvegardes =
+                projetsSauvegardes.filter(
+                    function(projetSauvegarde) {
+
+                        return (
+                            projetSauvegarde.id !==
+                            projet.id
+                        );
+
+                    }
+                );
+
+
+            localStorage.setItem(
+                "projets",
+                JSON.stringify(
+                    projetsSauvegardes
+                )
+            );
+
+
+            carteProjet.remove();
+
+
+            messageProjet.textContent =
+                "Le projet a bien été supprimé.";
+
+            messageProjet.classList.add(
+                "succes"
+            );
+
+
+            filtrerProjets();
+        }
+    );
+
+
+    carteProjet.appendChild(
+        boutonSupprimer
+    );
+}
+
+
+// ==================================================
+// CRÉATION D'UNE CARTE PROJET
+// ==================================================
+
+function creerCarteProjet(projet) {
+
+    const nouvelleCarte =
+        document.createElement("article");
+
+
+    const nouveauTitre =
+        document.createElement("h3");
+
+    nouveauTitre.textContent =
+        projet.titre;
+
+
+    const nouvelleDescription =
+        document.createElement("p");
+
+    nouvelleDescription.textContent =
+        projet.description;
+
+
+    const nouveauBudget =
+        document.createElement("p");
+
+    nouveauBudget.textContent =
+        "Budget : "
+        + projet.budget
+        + " €";
+
+
+    const nouvelleCategorie =
+        document.createElement("p");
+
+    nouvelleCategorie.textContent =
+        "Catégorie : "
+        + projet.categorie;
+
+    nouvelleCategorie.classList.add(
+        "categorie-projet"
+    );
+
+
+    nouvelleCarte.appendChild(
+        nouveauTitre
+    );
+
+    nouvelleCarte.appendChild(
+        nouvelleDescription
+    );
+
+    nouvelleCarte.appendChild(
+        nouveauBudget
+    );
+
+    nouvelleCarte.appendChild(
+        nouvelleCategorie
+    );
+
+
+    ajouterSuppression(
+        nouvelleCarte,
+        projet
+    );
+
+    ajouterCandidature(
+        nouvelleCarte
+    );
+
+
+    projetsGrid.appendChild(
+        nouvelleCarte
+    );
+}
+
+
+// ==================================================
+// CHARGEMENT DES PROJETS SAUVEGARDÉS
+// ==================================================
+
+function afficherProjetSauvegarde(projet) {
+
+    creerCarteProjet(projet);
+
+}
+
+
+projetsSauvegardes.forEach(
+    function(projet) {
+
+        afficherProjetSauvegarde(projet);
+
+    }
+);
+
+
+// ==================================================
+// ACTIVE LES CANDIDATURES DES PROJETS HTML
+// ==================================================
+
+document
+    .querySelectorAll("#projetsGrid article")
+    .forEach(function(carteProjet) {
+
+        // Les cartes dynamiques ont déjà été activées.
+        // On active seulement les cartes HTML.
+        if (
+            !carteProjet.querySelector(
+                ".btn-supprimer"
+            )
+        ) {
+
+            activerCandidature(
+                carteProjet
+            );
+
+        }
+
     });
 
-    nouvelleCarte.appendChild(boutonSupprimer);
+
+// ==================================================
+// FORMULAIRE DE CONTACT PRINCIPAL
+// ==================================================
+
+formulaire.addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
 
 
-    // =========================
-    // AJOUT DU PROJET
-    // =========================
+        const nomUtilisateur =
+            nom.value;
 
-    projetsGrid.appendChild(nouvelleCarte);
+        const emailUtilisateur =
+            email.value;
 
-    // Réinitialisation du formulaire
-    formProjet.reset();
+        const messageUtilisateur =
+            message.value;
 
-    // Masquage du formulaire
-    formProjet.hidden = true;
 
-    // Message de succès
-    messageProjet.textContent =
-        "Votre projet a bien été publié !";
+        if (
+            nomUtilisateur.trim() === ""
+        ) {
 
-    messageProjet.classList.add("succes");
+            messageErreur.textContent =
+                "Veuillez saisir votre nom.";
 
-    // Applique immédiatement la recherche
-    // et la catégorie actuellement sélectionnées
-    filtrerProjets();
-});
+            messageErreur.classList.remove(
+                "succes"
+            );
 
+            messageErreur.classList.add(
+                "erreur"
+            );
+
+            return;
+        }
+
+
+        if (
+            emailUtilisateur.trim() === ""
+        ) {
+
+            messageErreur.textContent =
+                "Veuillez saisir votre email.";
+
+            messageErreur.classList.remove(
+                "succes"
+            );
+
+            messageErreur.classList.add(
+                "erreur"
+            );
+
+            return;
+        }
+
+
+        if (
+            messageUtilisateur.trim() === ""
+        ) {
+
+            messageErreur.textContent =
+                "Veuillez saisir votre message.";
+
+            messageErreur.classList.remove(
+                "succes"
+            );
+
+            messageErreur.classList.add(
+                "erreur"
+            );
+
+            return;
+        }
+
+
+        if (
+            !emailUtilisateur.includes("@")
+        ) {
+
+            messageErreur.textContent =
+                "Veuillez saisir une adresse email valide.";
+
+            messageErreur.classList.remove(
+                "succes"
+            );
+
+            messageErreur.classList.add(
+                "erreur"
+            );
+
+            return;
+        }
+
+
+        messageErreur.classList.remove(
+            "erreur"
+        );
+
+        messageErreur.classList.add(
+            "succes"
+        );
+
+        messageErreur.textContent =
+            "Votre message a bien été envoyé !";
+
+
+        formulaire.reset();
+    }
+);
+
+
+// ==================================================
+// OUVERTURE DU FORMULAIRE PROJET
+// ==================================================
+
+publierProjet.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+
+        formProjet.hidden = false;
+
+        messageProjet.textContent = "";
+    }
+);
+
+
+// ==================================================
+// PUBLICATION D'UN PROJET
+// ==================================================
+
+formProjet.addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+
+        const titre =
+            titreProjet.value;
+
+        const description =
+            descriptionProjet.value;
+
+        const budget =
+            budgetProjet.value;
+
+        const categorie =
+            categorieProjet.value;
+
+
+        let formulaireValide = true;
+
+
+        // Efface les anciennes erreurs
+        erreurTitre.textContent = "";
+        erreurDescription.textContent = "";
+        erreurBudget.textContent = "";
+        erreurCategorie.textContent = "";
+
+
+        // Titre
+        if (titre.trim() === "") {
+
+            erreurTitre.textContent =
+                "Veuillez saisir un titre.";
+
+            erreurTitre.classList.add(
+                "erreur"
+            );
+
+            formulaireValide = false;
+        }
+
+
+        // Description
+        if (
+            description.trim() === ""
+        ) {
+
+            erreurDescription.textContent =
+                "Veuillez saisir une description.";
+
+            erreurDescription.classList.add(
+                "erreur"
+            );
+
+            formulaireValide = false;
+        }
+
+
+        // Budget
+        if (
+            budget === "" ||
+            Number(budget) < 1
+        ) {
+
+            erreurBudget.textContent =
+                "Veuillez saisir un budget valide.";
+
+            erreurBudget.classList.add(
+                "erreur"
+            );
+
+            formulaireValide = false;
+        }
+
+
+        // Catégorie
+        if (categorie === "") {
+
+            erreurCategorie.textContent =
+                "Veuillez choisir une catégorie.";
+
+            erreurCategorie.classList.add(
+                "erreur"
+            );
+
+            formulaireValide = false;
+        }
+
+
+        if (!formulaireValide) {
+            return;
+        }
+
+
+        // Création de l'objet projet
+        const projet = {
+
+            id: Date.now(),
+            titre: titre.trim(),
+            description:
+                description.trim(),
+            budget: budget,
+            categorie: categorie
+
+        };
+
+
+        // Sauvegarde
+        projetsSauvegardes.push(
+            projet
+        );
+
+        localStorage.setItem(
+            "projets",
+            JSON.stringify(
+                projetsSauvegardes
+            )
+        );
+
+
+        // Affichage de la carte
+        creerCarteProjet(projet);
+
+
+        // Réinitialisation
+        formProjet.reset();
+        formProjet.hidden = true;
+
+
+        // Succès
+        messageProjet.textContent =
+            "Votre projet a bien été publié !";
+
+        messageProjet.classList.add(
+            "succes"
+        );
+
+
+        filtrerProjets();
+    }
+);
+
+
+// ==================================================
+// RECHERCHE ET FILTRE DES PROJETS
+// ==================================================
 
 function filtrerProjets() {
 
     const texteRecherche =
-        rechercheProjet.value.toLowerCase();
+        rechercheProjet.value
+            .toLowerCase()
+            .trim();
 
     const categorieChoisie =
         filtreCategorie.value;
 
     const cartesProjets =
-        projetsGrid.querySelectorAll("article");
+        projetsGrid.querySelectorAll(
+            "article"
+        );
 
-    // Compteur des cartes visibles
     let nombreProjetsVisibles = 0;
 
-    cartesProjets.forEach(function(carte) {
 
-        const titreElement =
-            carte.querySelector("h3");
+    cartesProjets.forEach(
+        function(carte) {
 
-        const categorieCarte =
-            carte.querySelector(".categorie-projet");
+            const titreElement =
+                carte.querySelector("h3");
 
-        if (
-            titreElement === null ||
-            categorieCarte === null
-        ) {
-            return;
+            const categorieCarte =
+                carte.querySelector(
+                    ".categorie-projet"
+                );
+
+
+            if (
+                titreElement === null ||
+                categorieCarte === null
+            ) {
+                return;
+            }
+
+
+            const titreCarte =
+                titreElement.textContent
+                    .toLowerCase();
+
+
+            const categorieCarteTexte =
+                categorieCarte.textContent
+                    .replace(
+                        "Catégorie : ",
+                        ""
+                    )
+                    .trim();
+
+
+            const correspondRecherche =
+                titreCarte.includes(
+                    texteRecherche
+                );
+
+
+            const correspondCategorie =
+                categorieChoisie === "tous" ||
+                categorieChoisie ===
+                    categorieCarteTexte;
+
+
+            if (
+                correspondRecherche &&
+                correspondCategorie
+            ) {
+
+                carte.style.display = "";
+                nombreProjetsVisibles++;
+
+            } else {
+
+                carte.style.display = "none";
+
+            }
+
         }
+    );
 
-        const titreCarte =
-            titreElement.textContent.toLowerCase();
 
-        const categorieCarteTexte =
-            categorieCarte.textContent.replace(
-                "Catégorie : ",
-                ""
-            );
+    compteurProjets.textContent =
+        nombreProjetsVisibles === 1
+            ? "1 projet trouvé"
+            : nombreProjetsVisibles
+                + " projets trouvés";
 
-        const correspondRecherche =
-            titreCarte.includes(texteRecherche);
 
-        const correspondCategorie =
-            categorieChoisie === "tous" ||
-            categorieChoisie === categorieCarteTexte;
-
-        if (
-            correspondRecherche &&
-            correspondCategorie
-        ) {
-            carte.style.display = "";
-
-            // Une carte correspond
-            nombreProjetsVisibles++;
-        } else {
-            carte.style.display = "none";
-        }
-    });
-
-    // Affichage du message si aucune carte ne correspond
-compteurProjets.textContent =
-    nombreProjetsVisibles === 1
-        ? "1 projet trouvé"
-        : nombreProjetsVisibles + " projets trouvés";
-    if (nombreProjetsVisibles === 0) {
-        aucunProjet.hidden = false;
-    } else {
-        aucunProjet.hidden = true;
-    }
+    aucunProjet.hidden =
+        nombreProjetsVisibles !== 0;
 }
 
-// Recherche pendant la saisie
+
+// Recherche projet
 rechercheProjet.addEventListener(
     "input",
     filtrerProjets
 );
 
-// Filtre lors du changement de catégorie
+
+// Filtre catégorie
 filtreCategorie.addEventListener(
     "change",
     filtrerProjets
 );
+
+
+// ==================================================
+// AFFICHAGE INITIAL DES COMPTEURS
+// ==================================================
+
+filtrerFreelances();
+filtrerProjets();

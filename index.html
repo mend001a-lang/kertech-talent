@@ -214,6 +214,23 @@
                     <p class="categorie-projet">
                         Catégorie : Développement web
                     </p>
+                    <button class="postuler-projet">
+                     Postuler
+                     </button>
+                     <div class="form-candidature" hidden>
+
+    <textarea
+        class="message-candidature"
+        placeholder="Présentez votre candidature..."
+    ></textarea>
+
+    <button class="envoyer-candidature">
+        Envoyer ma candidature
+    </button>
+
+    <p class="message-succes-candidature"></p>
+
+</div>
 
                 </article>
 
@@ -232,7 +249,23 @@
                     <p class="categorie-projet">
                         Catégorie : Graphisme
                     </p>
+                   <button class="postuler-projet">
+                      Postuler
+                    </button>
+                    <div class="form-candidature" hidden>
 
+    <textarea
+        class="message-candidature"
+        placeholder="Présentez votre candidature..."
+    ></textarea>
+
+    <button class="envoyer-candidature">
+        Envoyer ma candidature
+    </button>
+
+    <p class="message-succes-candidature"></p>
+
+</div>
                 </article>
 
 
@@ -250,6 +283,23 @@
                     <p class="categorie-projet">
                         Catégorie : Rédaction
                     </p>
+                    <button class="postuler-projet">
+                    Postuler
+                    </button>
+                    <div class="form-candidature" hidden>
+
+    <textarea
+        class="message-candidature"
+        placeholder="Présentez votre candidature..."
+    ></textarea>
+
+    <button class="envoyer-candidature">
+        Envoyer ma candidature
+    </button>
+
+    <p class="message-succes-candidature"></p>
+
+</div>
 
                 </article>
 
@@ -376,8 +426,13 @@
         <section>
 
             <h2>Nos freelances</h2>
+            <input
+    type="search"
+    id="rechercheFreelance"
+    placeholder="Rechercher un freelance..."
+>
 
-            <div class="cards-grid">
+           <div class="cards-grid" id="freelancesGrid">
 
                <article>
     <h3>Aminata Diop</h3>
@@ -389,7 +444,23 @@
     <p>Disponible pour des missions de développement web.</p>
 </div>
 
+
     <button class="voir-profil">Voir le profil</button>
+    <button class="contacter-freelance">Contacter</button>
+   <div class="form-contact-freelance" hidden>
+
+    <textarea
+        class="message-freelance"
+        placeholder="Votre message..."
+    ></textarea>
+
+    <button class="envoyer-message">
+        Envoyer
+    </button>
+
+    <p class="message-succes-freelance"></p>
+
+</div>
 </article>
 
 
@@ -408,6 +479,24 @@
     <p>Disponible pour des missions de création graphique.</p>
 </div>
                     <button class="voir-profil">Voir le profil</button>
+                    <button class="contacter-freelance">
+    Contacter
+</button>
+
+<div class="form-contact-freelance" hidden>
+
+    <textarea
+        class="message-freelance"
+        placeholder="Votre message..."
+    ></textarea>
+
+    <button class="envoyer-message">
+        Envoyer
+    </button>
+
+    <p class="message-succes-freelance"></p>
+
+</div>
 
                 </article>
 
@@ -428,10 +517,33 @@
 </div>
                     
                     <button class="voir-profil">Voir le profil</button>
+                    <button class="contacter-freelance">
+    Contacter
+</button>
+
+<div class="form-contact-freelance" hidden>
+
+    <textarea
+        class="message-freelance"
+        placeholder="Votre message..."
+    ></textarea>
+
+    <button class="envoyer-message">
+        Envoyer
+    </button>
+
+    <p class="message-succes-freelance"></p>
+
+</div>
 
                 </article>
+</div>
 
-            </div>
+<p id="compteurFreelances"></p>
+
+<p id="aucunFreelance" hidden>
+    Aucun freelance trouvé
+</p>
 
         </section>
 
