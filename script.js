@@ -369,7 +369,10 @@ function ajouterCandidature(carteProjet, projet) {
     boutonPostuler.classList.add(
         "postuler-projet"
     );
-    if (projet.statut === "Terminé") {
+   if (
+    projet.statut === "En cours" ||
+    projet.statut === "Terminé"
+) {
     boutonPostuler.disabled = true;
 }
 
@@ -679,6 +682,8 @@ boutonAccepter.addEventListener(
     function() {
         if (typeof candidature !== "string") {
     candidature.statut = "Acceptée";
+    projet.statut = "En cours";
+    nouveauStatut.textContent = "Statut : En cours";
     localStorage.setItem(
     "projets",
     JSON.stringify(projetsSauvegardes)   
