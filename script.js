@@ -535,7 +535,7 @@ function creerCarteProjet(projet) {
         document.createElement("p");
 
     nouveauStatut.textContent =
-        "Statut : Ouvert";
+    "Statut : " + (projet.statut || "Ouvert");
 
     nouveauStatut.classList.add(
         "statut-projet"
@@ -581,12 +581,41 @@ boutonStatut.classList.add(
     nouvelleCarte.appendChild(
     boutonStatut
 );
+
 boutonStatut.addEventListener("click", function() {
+if (nouveauStatut.textContent === "Statut : Ouvert") {
 
     nouveauStatut.textContent =
         "Statut : En cours";
 
+    projet.statut = "En cours";
+
+
+
+        
+} else if (nouveauStatut.textContent === "Statut : En cours") {
+
+    nouveauStatut.textContent =
+        "Statut : Terminé";
+
+    projet.statut = "Terminé";
+
+    } else {
+
+        nouveauStatut.textContent =
+            "Statut : Ouvert";
+
+        projet.statut = "Ouvert";
+
+    }
+
+    localStorage.setItem(
+        "projets",
+        JSON.stringify(projetsSauvegardes)
+    );
+
 });
+
 
 
     // =========================
@@ -891,16 +920,17 @@ formProjet.addEventListener(
 
 
         // Création de l'objet projet
-        const projet = {
+       const projet = {
 
-            id: Date.now(),
-            titre: titre.trim(),
-            description:
-                description.trim(),
-            budget: budget,
-            categorie: categorie
+    id: Date.now(),
+    titre: titre.trim(),
+    description:
+        description.trim(),
+    budget: budget,
+    categorie: categorie,
+    statut: "Ouvert"
 
-        };
+};
 
 
         // Sauvegarde
