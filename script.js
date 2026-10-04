@@ -331,7 +331,10 @@ function activerCandidature(carteProjet, projet) {
                 if (!projet.listeCandidatures) {
     projet.listeCandidatures = [];
 }
-projet.listeCandidatures.push(messageUtilisateur);
+projet.listeCandidatures.push({
+    message: messageUtilisateur,
+    statut: "En attente"
+});
        projet.candidatures =
     (projet.candidatures || 0) + 1;
 
@@ -637,10 +640,85 @@ boutonVoirCandidatures.addEventListener(
         (projet.listeCandidatures || []).forEach(
             function(candidature) {
 const message = document.createElement("p");
-message.textContent = candidature;
+message.textContent =
+    typeof candidature === "string"
+        ? candidature
+        : candidature.message + " — " + candidature.statut;
+const boutonAccepter =
+    document.createElement("button");
+
+boutonAccepter.textContent = "Accepter";
+
+
+boutonAccepter.classList.add(
+    "accepter-candidature"
+);
+const boutonRefuser =
+    document.createElement("button");
+
+boutonRefuser.textContent = "Refuser";
+
+boutonRefuser.classList.add(
+    "refuser-candidature"
+);
+if (
+    typeof candidature !== "string" &&
+    (
+        candidature.statut === "Acceptée" ||
+        candidature.statut === "Refusée"
+    )
+) {
+    boutonAccepter.disabled = true;
+    boutonRefuser.disabled = true;
+}
 listeCandidatures.appendChild(message);
+listeCandidatures.appendChild(boutonAccepter);
+listeCandidatures.appendChild(boutonRefuser);
+boutonAccepter.addEventListener(
+    "click",
+    function() {
+        if (typeof candidature !== "string") {
+    candidature.statut = "Acceptée";
+    localStorage.setItem(
+    "projets",
+    JSON.stringify(projetsSauvegardes)   
+);
+}
+boutonAccepter.disabled = true;
+        boutonRefuser.disabled = true;
+
+        message.textContent =
+    (typeof candidature === "string"
+        ? candidature
+        : candidature.message)
+    + " — Acceptée";
+            
+    }
+    
+);
+boutonRefuser.addEventListener(
+    "click",
+    function() {
+        if (typeof candidature !== "string") {
+    candidature.statut = "Refusée";
+    localStorage.setItem(
+    "projets",
+    JSON.stringify(projetsSauvegardes)
+);
+}
+boutonAccepter.disabled = true;
+boutonRefuser.disabled = true;
+        message.textContent =
+    (typeof candidature === "string"
+        ? candidature
+        : candidature.message)
+    + " — Refusée";
+    }
+);
             }
+            
         );
+        
         listeCandidatures.hidden =
             !listeCandidatures.hidden;
             
