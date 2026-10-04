@@ -234,7 +234,7 @@ rechercheFreelance.addEventListener(
 // CANDIDATURE AUX PROJETS
 // ==================================================
 
-function activerCandidature(carteProjet) {
+function activerCandidature(carteProjet, projet) {
 
     const bouton =
         carteProjet.querySelector(
@@ -328,13 +328,25 @@ function activerCandidature(carteProjet) {
                 "Candidature envoyée pour le projet : "
                 + titre
                 + " !";
+       projet.candidatures =
+    (projet.candidatures || 0) + 1;
 
-            messageCandidature.value = "";
-        }
-    );
+const compteurCandidatures =
+    carteProjet.querySelector(".compteur-candidatures");
 
+compteurCandidatures.textContent =
+    "Candidatures : " + projet.candidatures;
+
+    localStorage.setItem(
+    "projets",
+    JSON.stringify(projetsSauvegardes)
+);
+
+messageCandidature.value = "";
+
+    }
+);
 }
-
 
 // ==================================================
 // AJOUT DU BOUTON POSTULER À UNE CARTE DYNAMIQUE
@@ -387,10 +399,8 @@ function ajouterCandidature(carteProjet, projet) {
         formulaireCandidature
     );
 
-
-    activerCandidature(carteProjet);
+    activerCandidature(carteProjet, projet);
 }
-
 
 // ==================================================
 // SUPPRESSION D'UN PROJET SAUVEGARDÉ
@@ -543,6 +553,15 @@ function creerCarteProjet(projet) {
     nouveauStatut.classList.add(
         "statut-projet"
     );
+    const compteurCandidatures =
+    document.createElement("p");
+
+compteurCandidatures.textContent =
+    "Candidatures : " + (projet.candidatures || 0);
+
+compteurCandidatures.classList.add(
+    "compteur-candidatures"
+);
     // =========================
 // BOUTON CHANGER LE STATUT
 // =========================
@@ -581,6 +600,9 @@ boutonStatut.classList.add(
     nouvelleCarte.appendChild(
         nouveauStatut
     );
+    nouvelleCarte.appendChild(
+    compteurCandidatures
+);
     nouvelleCarte.appendChild(
     boutonStatut
 );
@@ -928,7 +950,7 @@ formProjet.addEventListener(
 
 
         // Création de l'objet projet
-       const projet = {
+    const projet = {
 
     id: Date.now(),
     titre: titre.trim(),
@@ -936,7 +958,8 @@ formProjet.addEventListener(
         description.trim(),
     budget: budget,
     categorie: categorie,
-    statut: "Ouvert"
+    statut: "Ouvert",
+    candidatures: 0
 
 };
 
