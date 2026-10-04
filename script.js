@@ -340,7 +340,7 @@ function activerCandidature(carteProjet) {
 // AJOUT DU BOUTON POSTULER À UNE CARTE DYNAMIQUE
 // ==================================================
 
-function ajouterCandidature(carteProjet) {
+function ajouterCandidature(carteProjet, projet) {
 
     const boutonPostuler =
         document.createElement("button");
@@ -350,6 +350,9 @@ function ajouterCandidature(carteProjet) {
     boutonPostuler.classList.add(
         "postuler-projet"
     );
+    if (projet.statut === "Terminé") {
+    boutonPostuler.disabled = true;
+}
 
 
     const formulaireCandidature =
@@ -599,6 +602,7 @@ if (nouveauStatut.textContent === "Statut : Ouvert") {
         "Statut : Terminé";
 
     projet.statut = "Terminé";
+     boutonPostuler.disabled = true;
 
     } else {
 
@@ -606,8 +610,10 @@ if (nouveauStatut.textContent === "Statut : Ouvert") {
             "Statut : Ouvert";
 
         projet.statut = "Ouvert";
+        boutonPostuler.disabled = false;
 
     }
+    
 
     localStorage.setItem(
         "projets",
@@ -632,10 +638,12 @@ if (nouveauStatut.textContent === "Statut : Ouvert") {
     // CANDIDATURE
     // =========================
 
-    ajouterCandidature(
-        nouvelleCarte
-    );
-
+   ajouterCandidature(
+    nouvelleCarte,
+    projet
+);
+const boutonPostuler =
+    nouvelleCarte.querySelector(".postuler-projet");
 
     // =========================
     // AJOUT À LA PAGE
