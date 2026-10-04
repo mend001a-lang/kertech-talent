@@ -476,6 +476,10 @@ function creerCarteProjet(projet) {
         document.createElement("article");
 
 
+    // =========================
+    // TITRE
+    // =========================
+
     const nouveauTitre =
         document.createElement("h3");
 
@@ -483,12 +487,20 @@ function creerCarteProjet(projet) {
         projet.titre;
 
 
+    // =========================
+    // DESCRIPTION
+    // =========================
+
     const nouvelleDescription =
         document.createElement("p");
 
     nouvelleDescription.textContent =
         projet.description;
 
+
+    // =========================
+    // BUDGET
+    // =========================
 
     const nouveauBudget =
         document.createElement("p");
@@ -498,6 +510,10 @@ function creerCarteProjet(projet) {
         + projet.budget
         + " €";
 
+
+    // =========================
+    // CATÉGORIE
+    // =========================
 
     const nouvelleCategorie =
         document.createElement("p");
@@ -510,6 +526,38 @@ function creerCarteProjet(projet) {
         "categorie-projet"
     );
 
+
+    // =========================
+    // STATUT
+    // =========================
+
+    const nouveauStatut =
+        document.createElement("p");
+
+    nouveauStatut.textContent =
+        "Statut : Ouvert";
+
+    nouveauStatut.classList.add(
+        "statut-projet"
+    );
+    // =========================
+// BOUTON CHANGER LE STATUT
+// =========================
+
+const boutonStatut =
+    document.createElement("button");
+
+boutonStatut.textContent =
+    "Changer le statut";
+
+boutonStatut.classList.add(
+    "changer-statut"
+);
+
+
+    // =========================
+    // AJOUT DU CONTENU
+    // =========================
 
     nouvelleCarte.appendChild(
         nouveauTitre
@@ -527,33 +575,52 @@ function creerCarteProjet(projet) {
         nouvelleCategorie
     );
 
+    nouvelleCarte.appendChild(
+        nouveauStatut
+    );
+    nouvelleCarte.appendChild(
+    boutonStatut
+);
+boutonStatut.addEventListener("click", function() {
+
+    nouveauStatut.textContent =
+        "Statut : En cours";
+
+});
+
+
+    // =========================
+    // BOUTON SUPPRIMER
+    // =========================
 
     ajouterSuppression(
         nouvelleCarte,
         projet
     );
 
+
+    // =========================
+    // CANDIDATURE
+    // =========================
+
     ajouterCandidature(
         nouvelleCarte
     );
 
 
+    // =========================
+    // AJOUT À LA PAGE
+    // =========================
+
     projetsGrid.appendChild(
         nouvelleCarte
     );
 }
-
-
-// ==================================================
-// CHARGEMENT DES PROJETS SAUVEGARDÉS
-// ==================================================
-
 function afficherProjetSauvegarde(projet) {
 
     creerCarteProjet(projet);
 
 }
-
 
 projetsSauvegardes.forEach(
     function(projet) {
@@ -562,7 +629,6 @@ projetsSauvegardes.forEach(
 
     }
 );
-
 
 // ==================================================
 // ACTIVE LES CANDIDATURES DES PROJETS HTML
@@ -713,7 +779,11 @@ publierProjet.addEventListener(
 
         event.preventDefault();
 
+       
+
         formProjet.hidden = false;
+
+       
 
         messageProjet.textContent = "";
     }
@@ -848,6 +918,23 @@ formProjet.addEventListener(
 
         // Affichage de la carte
         creerCarteProjet(projet);
+        // ==================================================
+// CHARGEMENT DES PROJETS SAUVEGARDÉS
+// ==================================================
+
+function afficherProjetSauvegarde(projet) {
+
+    creerCarteProjet(projet);
+
+}
+
+projetsSauvegardes.forEach(
+    function(projet) {
+
+        afficherProjetSauvegarde(projet);
+
+    }
+);
 
 
         // Réinitialisation
