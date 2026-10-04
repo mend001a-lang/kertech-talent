@@ -740,6 +740,12 @@ if (nouveauStatut.textContent === "Statut : Ouvert") {
         "Statut : En cours";
 
     projet.statut = "En cours";
+    boutonPostuler.disabled = true;
+    const formulaireCandidature =
+    nouvelleCarte.querySelector(".form-candidature");
+
+formulaireCandidature.hidden = true;
+boutonPostuler.textContent = "Postuler";
 
 
 
@@ -751,16 +757,9 @@ if (nouveauStatut.textContent === "Statut : Ouvert") {
 
     projet.statut = "Terminé";
      boutonPostuler.disabled = true;
-
-    } else {
-
-        nouveauStatut.textContent =
-            "Statut : Ouvert";
-
-        projet.statut = "Ouvert";
-        boutonPostuler.disabled = false;
-
-    }
+} else {
+    return;
+}
     
 
     localStorage.setItem(
