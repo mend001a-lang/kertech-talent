@@ -328,6 +328,10 @@ function activerCandidature(carteProjet, projet) {
                 "Candidature envoyée pour le projet : "
                 + titre
                 + " !";
+                if (!projet.listeCandidatures) {
+    projet.listeCandidatures = [];
+}
+projet.listeCandidatures.push(messageUtilisateur);
        projet.candidatures =
     (projet.candidatures || 0) + 1;
 
@@ -562,6 +566,23 @@ compteurCandidatures.textContent =
 compteurCandidatures.classList.add(
     "compteur-candidatures"
 );
+const boutonVoirCandidatures =
+    document.createElement("button");
+
+boutonVoirCandidatures.textContent =
+    "Voir les candidatures";
+
+boutonVoirCandidatures.classList.add(
+    "voir-candidatures"
+);
+const listeCandidatures =
+    document.createElement("div");
+
+listeCandidatures.classList.add(
+    "liste-candidatures"
+);
+
+listeCandidatures.hidden = true;
     // =========================
 // BOUTON CHANGER LE STATUT
 // =========================
@@ -602,6 +623,28 @@ boutonStatut.classList.add(
     );
     nouvelleCarte.appendChild(
     compteurCandidatures
+);
+nouvelleCarte.appendChild(
+    boutonVoirCandidatures
+);
+nouvelleCarte.appendChild(
+    listeCandidatures
+);
+boutonVoirCandidatures.addEventListener(
+    "click",
+    function() {
+        listeCandidatures.innerHTML = "";
+        (projet.listeCandidatures || []).forEach(
+            function(candidature) {
+const message = document.createElement("p");
+message.textContent = candidature;
+listeCandidatures.appendChild(message);
+            }
+        );
+        listeCandidatures.hidden =
+            !listeCandidatures.hidden;
+            
+    }
 );
     nouvelleCarte.appendChild(
     boutonStatut
