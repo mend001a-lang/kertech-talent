@@ -636,6 +636,14 @@ nouvelleCarte.appendChild(
 nouvelleCarte.appendChild(
     listeCandidatures
 );
+ajouterCandidature(
+    nouvelleCarte,
+    projet
+);
+
+
+const boutonPostuler =
+    nouvelleCarte.querySelector(".postuler-projet");
 boutonVoirCandidatures.addEventListener(
     "click",
     function() {
@@ -684,6 +692,8 @@ boutonAccepter.addEventListener(
     candidature.statut = "Acceptée";
     projet.statut = "En cours";
     nouveauStatut.textContent = "Statut : En cours";
+    boutonPostuler.textContent = "Postuler";
+    nouvelleCarte.querySelector(".form-candidature").hidden = true;
     localStorage.setItem(
     "projets",
     JSON.stringify(projetsSauvegardes)   
@@ -785,12 +795,8 @@ boutonPostuler.textContent = "Postuler";
     // CANDIDATURE
     // =========================
 
-   ajouterCandidature(
-    nouvelleCarte,
-    projet
-);
-const boutonPostuler =
-    nouvelleCarte.querySelector(".postuler-projet");
+  
+
 
     // =========================
     // AJOUT À LA PAGE

@@ -195,7 +195,118 @@
 
             <!-- CARTES DES PROJETS -->
 
-            <div
+           
+
+
+            <!-- MESSAGE AUCUN RÉSULTAT -->
+
+         
+
+<p id="compteurProjets"></p>
+
+<p id="aucunProjet" hidden>
+    Aucun projet trouvé
+</p>
+
+<a
+    href="#"
+    class="project-link"
+    id="publierProjet"
+> Créer un projet
+</a>
+
+
+            <!-- =========================
+                 FORMULAIRE PROJET
+            ========================== -->
+
+            <form id="formProjet" hidden>
+
+
+                <!-- TITRE -->
+
+                <label for="titreProjet">
+                    Titre du projet
+                </label>
+
+                <input
+                    type="text"
+                    id="titreProjet"
+                >
+
+                <p id="erreurTitre"></p>
+
+
+                <!-- DESCRIPTION -->
+
+                <label for="descriptionProjet">
+                    Description
+                </label>
+
+                <textarea
+                    id="descriptionProjet"
+                ></textarea>
+
+                <p id="erreurDescription"></p>
+
+
+                <!-- BUDGET -->
+
+                <label for="budgetProjet">
+                    Budget (€)
+                </label>
+
+                <input
+                    type="number"
+                    id="budgetProjet"
+                    min="1"
+                >
+
+                <p id="erreurBudget"></p>
+
+
+                <!-- CATÉGORIE -->
+
+                <label for="categorieProjet">
+                    Catégorie
+                </label>
+
+                <select id="categorieProjet">
+
+                    <option value="">
+                        Choisissez une catégorie
+                    </option>
+
+                    <option value="Développement web">
+                        Développement web
+                    </option>
+
+                    <option value="Graphisme">
+                        Graphisme
+                    </option>
+
+                    <option value="Rédaction">
+                        Rédaction
+                    </option>
+
+                </select>
+
+                <p id="erreurCategorie"></p>
+
+
+                <!-- VALIDATION -->
+
+                <button type="submit">
+                    Publier
+                </button>
+
+            </form>
+
+
+            <!-- MESSAGE PROJET -->
+
+            <p id="messageProjet"></p>
+ <div
                 class="cards-grid"
                 id="projetsGrid"
             >
@@ -317,117 +428,6 @@
                 </article>
 
             </div>
-
-
-            <!-- MESSAGE AUCUN RÉSULTAT -->
-
-         </div>
-
-<p id="compteurProjets"></p>
-
-<p id="aucunProjet" hidden>
-    Aucun projet trouvé
-</p>
-
-<a
-    href="#"
-    class="project-link"
-    id="publierProjet"
-> Créer un projet
-</a>
-
-
-            <!-- =========================
-                 FORMULAIRE PROJET
-            ========================== -->
-
-            <form id="formProjet" hidden>
-
-
-                <!-- TITRE -->
-
-                <label for="titreProjet">
-                    Titre du projet
-                </label>
-
-                <input
-                    type="text"
-                    id="titreProjet"
-                >
-
-                <p id="erreurTitre"></p>
-
-
-                <!-- DESCRIPTION -->
-
-                <label for="descriptionProjet">
-                    Description
-                </label>
-
-                <textarea
-                    id="descriptionProjet"
-                ></textarea>
-
-                <p id="erreurDescription"></p>
-
-
-                <!-- BUDGET -->
-
-                <label for="budgetProjet">
-                    Budget (€)
-                </label>
-
-                <input
-                    type="number"
-                    id="budgetProjet"
-                    min="1"
-                >
-
-                <p id="erreurBudget"></p>
-
-
-                <!-- CATÉGORIE -->
-
-                <label for="categorieProjet">
-                    Catégorie
-                </label>
-
-                <select id="categorieProjet">
-
-                    <option value="">
-                        Choisissez une catégorie
-                    </option>
-
-                    <option value="Développement web">
-                        Développement web
-                    </option>
-
-                    <option value="Graphisme">
-                        Graphisme
-                    </option>
-
-                    <option value="Rédaction">
-                        Rédaction
-                    </option>
-
-                </select>
-
-                <p id="erreurCategorie"></p>
-
-
-                <!-- VALIDATION -->
-
-                <button type="submit">
-                    Publier
-                </button>
-
-            </form>
-
-
-            <!-- MESSAGE PROJET -->
-
-            <p id="messageProjet"></p>
-
         </section>
 
 
