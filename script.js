@@ -234,16 +234,18 @@ rechercheFreelance.addEventListener(
 // CANDIDATURE AUX PROJETS
 // ==================================================
 
-function activerCandidature(carteProjet, projet) {
 
-    const bouton =
-        carteProjet.querySelector(
-            ".postuler-projet"
-        );
+
+function activerCandidature(carteProjet, projet) {
 
     const formulaireCandidature =
         carteProjet.querySelector(
             ".form-candidature"
+        );
+
+    const bouton =
+        carteProjet.querySelector(
+            ".postuler-projet"
         );
 
     const messageCandidature =
@@ -341,14 +343,21 @@ projet.listeCandidatures.push({
 const compteurCandidatures =
     carteProjet.querySelector(".compteur-candidatures");
 
-compteurCandidatures.textContent =
-    "Candidatures : " + projet.candidatures;
+if (compteurCandidatures) {
+    compteurCandidatures.textContent =
+        "Candidatures : " + projet.candidatures;
+}
 
     localStorage.setItem(
     "projets",
     JSON.stringify(projetsSauvegardes)
 );
-
+if (projet.cleSauvegarde) {
+    localStorage.setItem(
+        projet.cleSauvegarde,
+        JSON.stringify(projet)
+    );
+}
 messageCandidature.value = "";
 
     }
@@ -408,8 +417,18 @@ function ajouterCandidature(carteProjet, projet) {
     carteProjet.appendChild(
         formulaireCandidature
     );
+    const compteurExemple =
+    carteProjet.querySelector(
+        ".compteur-candidatures"
+    );
 
-    activerCandidature(carteProjet, projet);
+compteurExemple.textContent =
+    "Candidatures : " + projet.candidatures;
+
+activerCandidature(
+    carteProjet,
+    projet
+);
 }
 
 // ==================================================
@@ -830,17 +849,31 @@ document
 
         // Les cartes dynamiques ont déjà été activées.
         // On active seulement les cartes HTML.
-        if (
-            !carteProjet.querySelector(
-                ".btn-supprimer"
-            )
-        ) {
+      if (
+    !carteProjet.querySelector(
+        ".btn-supprimer"
+    )
+) {
 
-            activerCandidature(
-                carteProjet
-            );
+const projetExemple = JSON.parse(
+    localStorage.getItem(
+        "projetExemple-" +
+        carteProjet.querySelector("h3").textContent.trim()
+    )
+) || {
+    candidatures: 0,
+    listeCandidatures: [],
+    cleSauvegarde:
+        "projetExemple-" +
+        carteProjet.querySelector("h3").textContent.trim()
+};
 
-        }
+
+activerCandidature(
+    carteProjet,
+    projetExemple
+);
+}
 
     });
 
