@@ -1,4 +1,4 @@
-console.log("KërTech Talent : JavaScript connecté !");
+
 
 
 // ==================================================
