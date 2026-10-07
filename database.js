@@ -7,9 +7,10 @@ db.run(`
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         titre TEXT NOT NULL,
         categorie TEXT NOT NULL,
-        statut TEXT NOT NULL
+        statut TEXT NOT NULL,
+        description TEXT,
+        budget REAL
     )
-       
 `);
 
 

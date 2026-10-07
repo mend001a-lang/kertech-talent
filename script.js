@@ -1111,7 +1111,34 @@ formProjet.addEventListener(
         if (!formulaireValide) {
             return;
         }
+const projetAPI = {
+    titre: titre.trim(),
+    description: description.trim(),
+    budget: Number(budget),
+    categorie: categorie,
+    statut: "Ouvert"
+};
 
+fetch("http://localhost:3000/projets", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(projetAPI)
+})
+fetch("http://localhost:3000/projets", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(projetAPI)
+})
+.then(function(response) {
+    return response.json();
+})
+.then(function(data) {
+    console.log("Réponse du serveur :", data);
+});
 
         // Création de l'objet projet
     const projet = {

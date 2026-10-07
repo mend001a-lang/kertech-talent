@@ -4,6 +4,7 @@ const sqlite3 = require("sqlite3").verbose();
 const app = express();
 const db = new sqlite3.Database("./kertech.db");
 app.use(cors());
+app.use(express.json());
 const PORT = 3000;
 
 app.get("/", (req, res) => {
@@ -21,6 +22,30 @@ app.get("/projets", (req, res) => {
 
         res.json(projets);
     });
+});
+app.post("/projets", (req, res) => {
+    console.log(req.body);
+   const { titre, description, budget, categorie, statut } = req.body;
+   db.run(
+    `INSERT INTO projets (titre, description, budget, categorie, statut) VALUES (?, ?, ?, ?, ?)`,
+    [titre, description, budget, categorie, statut],
+    function (err) {
+    if (err) {
+        console.error(err.message);
+        return res.status(500).json({
+            erreur: "Erreur lors de la création du projet"
+        });
+    }
+
+    console.log("Projet enregistré avec l'id :", this.lastID);
+    res.status(201).json({
+    message: "Projet créé avec succès",
+    id: this.lastID
+});
+}
+);
+
+   
 });
 
 app.listen(PORT, () => {
