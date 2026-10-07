@@ -1299,3 +1299,24 @@ filtreCategorie.addEventListener(
 
 filtrerFreelances();
 filtrerProjets();
+
+fetch("http://localhost:3000/projets")
+    .then((response) => {
+                return response.json();
+     })
+         .then((projets) => {
+                projets.forEach((projet) => {
+                    const article = document.createElement("article");
+                    const titre = document.createElement("h3");
+                    const categorie = document.createElement("p");
+                    const statut = document.createElement("p");
+                    titre.textContent = projet.titre;
+                    categorie.textContent = projet.categorie;
+                    statut.textContent = projet.statut;
+                    article.appendChild(titre);
+                    article.appendChild(categorie);
+                    article.appendChild(statut);
+                    projetsGrid.appendChild(article);
+
+});
+                        });

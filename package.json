@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/mend001a-lang/kertech-talent#readme",
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.2.1"
   }
 }
