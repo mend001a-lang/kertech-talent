@@ -35,6 +35,7 @@ app.post("/projets", (req, res) => {
         return res.status(500).json({
             erreur: "Erreur lors de la création du projet"
         });
+        
     }
 
     console.log("Projet enregistré avec l'id :", this.lastID);
@@ -46,6 +47,47 @@ app.post("/projets", (req, res) => {
 );
 
    
+});
+// Modification du statut d'un projet
+app.patch("/projets/:id", (req, res) => {
+    const id = req.params.id;
+    const { statut } = req.body;
+    if (!Number.isSafeInteger(Number(id)) || Number(id) <= 0) {
+    return res.status(400).json({
+        erreur: "Identifiant de projet invalide"
+    });
+}
+    if (!["Ouvert", "En cours", "Terminé"].includes(statut)) {
+    return res.status(400).json({
+        erreur: "Statut invalide"
+    });
+}
+    
+    db.run(
+    "UPDATE projets SET statut = ? WHERE id = ?",
+    [statut, id],
+    function(err) {
+
+        if (err) {
+            console.error(err.message);
+
+            return res.status(500).json({
+                erreur: "Impossible de modifier le statut"
+            });
+        }
+ if (this.changes === 0) {
+        return res.status(404).json({
+            erreur: "Projet introuvable"
+        });
+    }
+    res.status(200).json({
+    message: "Statut modifié avec succès",
+    id: id,
+    statut: statut
+});
+    }
+);
+
 });
 
 app.listen(PORT, () => {

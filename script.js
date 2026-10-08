@@ -348,10 +348,6 @@ if (compteurCandidatures) {
         "Candidatures : " + projet.candidatures;
 }
 
-    localStorage.setItem(
-    "projets",
-    JSON.stringify(projetsSauvegardes)
-);
 if (projet.cleSauvegarde) {
     localStorage.setItem(
         projet.cleSauvegarde,
@@ -543,14 +539,12 @@ function creerCarteProjet(projet) {
     // =========================
     // BUDGET
     // =========================
-
-    const nouveauBudget =
-        document.createElement("p");
-
-    nouveauBudget.textContent =
-        "Budget : "
-        + projet.budget
-        + " €";
+const nouveauBudget = document.createElement("p");
+   nouveauBudget.textContent =
+    "Budget : " +
+    (projet.budget === "Non renseigné"
+        ? "Non renseigné"
+        : projet.budget + " €");
 
 
     // =========================
@@ -667,7 +661,12 @@ boutonVoirCandidatures.addEventListener(
     "click",
     function() {
         listeCandidatures.innerHTML = "";
+        if (!projet.listeCandidatures?.length) {
+    listeCandidatures.textContent =
+        "Aucune candidature pour ce projet.";
+}
         (projet.listeCandidatures || []).forEach(
+            
             function(candidature) {
 const message = document.createElement("p");
 message.textContent =
@@ -762,40 +761,49 @@ boutonRefuser.disabled = true;
     boutonStatut
 );
 
-boutonStatut.addEventListener("click", function() {
+boutonStatut.addEventListener("click", async function() {
+    let prochainStatut;
 if (nouveauStatut.textContent === "Statut : Ouvert") {
+    prochainStatut = "En cours";
 
-    nouveauStatut.textContent =
-        "Statut : En cours";
 
-    projet.statut = "En cours";
-    boutonPostuler.disabled = true;
-    const formulaireCandidature =
-    nouvelleCarte.querySelector(".form-candidature");
 
-formulaireCandidature.hidden = true;
-boutonPostuler.textContent = "Postuler";
+
 
 
 
         
 } else if (nouveauStatut.textContent === "Statut : En cours") {
+    prochainStatut = "Terminé";
 
-    nouveauStatut.textContent =
-        "Statut : Terminé";
 
-    projet.statut = "Terminé";
-     boutonPostuler.disabled = true;
 } else {
     return;
 }
     
+console.log("Statut à envoyer à SQLite :", prochainStatut);
+    try {
+const response = await fetch(`http://localhost:3000/projets/${projet.id}`, {
+    method: "PATCH",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        statut: prochainStatut
+    })
+});
+if (!response.ok) {
+    throw new Error("Impossible de modifier le statut du projet");
+}
+projet.statut = prochainStatut;
+nouveauStatut.textContent = "Statut : " + prochainStatut;
+boutonPostuler.disabled = true;
+nouvelleCarte.querySelector(".form-candidature").hidden = true;
 
-    localStorage.setItem(
-        "projets",
-        JSON.stringify(projetsSauvegardes)
-    );
-
+} catch (erreur) {
+    console.error("Erreur lors du changement de statut :", erreur);
+    alert("Impossible de modifier le statut. Veuillez réessayer.");
+}
 });
 
 
@@ -831,13 +839,7 @@ function afficherProjetSauvegarde(projet) {
 
 }
 
-projetsSauvegardes.forEach(
-    function(projet) {
 
-        afficherProjetSauvegarde(projet);
-
-    }
-);
 
 // ==================================================
 // ACTIVE LES CANDIDATURES DES PROJETS HTML
@@ -1019,7 +1021,7 @@ publierProjet.addEventListener(
 
 formProjet.addEventListener(
     "submit",
-    function(event) {
+    async function(event) {
 
         event.preventDefault();
 
@@ -1118,32 +1120,9 @@ const projetAPI = {
     categorie: categorie,
     statut: "Ouvert"
 };
+  const projet = {
 
-fetch("http://localhost:3000/projets", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify(projetAPI)
-})
-fetch("http://localhost:3000/projets", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify(projetAPI)
-})
-.then(function(response) {
-    return response.json();
-})
-.then(function(data) {
-    console.log("Réponse du serveur :", data);
-});
-
-        // Création de l'objet projet
-    const projet = {
-
-    id: Date.now(),
+    id: null,
     titre: titre.trim(),
     description:
         description.trim(),
@@ -1153,9 +1132,48 @@ fetch("http://localhost:3000/projets", {
     candidatures: 0
 
 };
+try {
+
+    await fetch("http://localhost:3000/projets", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(projetAPI)
+})
+
+.then(function(response) {
+
+    if (!response.ok) {
+        throw new Error("Erreur lors de la publication du projet");
+    }
+
+    return response.json();
+})
+.then(function(data) {
+    console.log("Réponse du serveur :", data);
+    console.log("ID SQLite du projet :", data.id);
+
+    projet.id = data.id;
+});
+} catch (erreur) {
+    console.error("Erreur API :", erreur);
+
+    messageProjet.textContent =
+        "Impossible de publier le projet. Veuillez réessayer.";
+
+    messageProjet.classList.remove("succes");
+    messageProjet.classList.add("erreur");
+
+    return;
+}
+
+        // Création de l'objet projet
+
 
 
         // Sauvegarde
+        /*
         projetsSauvegardes.push(
             projet
         );
@@ -1166,6 +1184,7 @@ fetch("http://localhost:3000/projets", {
                 projetsSauvegardes
             )
         );
+        */
 
 
         // Affichage de la carte
@@ -1173,20 +1192,6 @@ fetch("http://localhost:3000/projets", {
         // ==================================================
 // CHARGEMENT DES PROJETS SAUVEGARDÉS
 // ==================================================
-
-function afficherProjetSauvegarde(projet) {
-
-    creerCarteProjet(projet);
-
-}
-
-projetsSauvegardes.forEach(
-    function(projet) {
-
-        afficherProjetSauvegarde(projet);
-
-    }
-);
 
 
         // Réinitialisation
@@ -1326,24 +1331,19 @@ filtreCategorie.addEventListener(
 
 filtrerFreelances();
 filtrerProjets();
-
 fetch("http://localhost:3000/projets")
     .then((response) => {
-                return response.json();
-     })
-         .then((projets) => {
-                projets.forEach((projet) => {
-                    const article = document.createElement("article");
-                    const titre = document.createElement("h3");
-                    const categorie = document.createElement("p");
-                    const statut = document.createElement("p");
-                    titre.textContent = projet.titre;
-                    categorie.textContent = projet.categorie;
-                    statut.textContent = projet.statut;
-                    article.appendChild(titre);
-                    article.appendChild(categorie);
-                    article.appendChild(statut);
-                    projetsGrid.appendChild(article);
+        return response.json();
+    })
+    .then((projets) => {
 
-});
-                        });
+        projets.forEach((projet) => {
+
+            projet.candidatures = 0;
+            projet.budget = projet.budget ?? "Non renseigné";
+
+            creerCarteProjet(projet);
+
+        });
+
+    });
