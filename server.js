@@ -49,45 +49,108 @@ app.post("/projets", (req, res) => {
    
 });
 // Modification du statut d'un projet
+// ======================================
+// MODIFIER LE STATUT D'UN PROJET (PATCH)
+// ======================================
+
 app.patch("/projets/:id", (req, res) => {
-    const id = req.params.id;
+
+    const id = Number(req.params.id);
     const { statut } = req.body;
-    if (!Number.isSafeInteger(Number(id)) || Number(id) <= 0) {
-    return res.status(400).json({
-        erreur: "Identifiant de projet invalide"
-    });
-}
+
+    // Vérifier l'identifiant
+    if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({
+            erreur: "Identifiant de projet invalide"
+        });
+    }
+
+    // Vérifier le statut
     if (!["Ouvert", "En cours", "Terminé"].includes(statut)) {
-    return res.status(400).json({
-        erreur: "Statut invalide"
-    });
-}
-    
+        return res.status(400).json({
+            erreur: "Statut invalide"
+        });
+    }
+
+    // Modifier le statut dans SQLite
     db.run(
-    "UPDATE projets SET statut = ? WHERE id = ?",
-    [statut, id],
-    function(err) {
+        "UPDATE projets SET statut = ? WHERE id = ?",
+        [statut, id],
+        function (err) {
+
+            if (err) {
+                console.error(err.message);
+
+                return res.status(500).json({
+                    erreur: "Impossible de modifier le statut"
+                });
+            }
+
+            if (this.changes === 0) {
+                return res.status(404).json({
+                    erreur: "Projet introuvable"
+                });
+            }
+
+            return res.status(200).json({
+                message: "Statut modifié avec succès",
+                id: id,
+                statut: statut
+            });
+        }
+    );
+});
+
+
+// ======================================
+// SUPPRIMER UN PROJET (DELETE)
+// ======================================
+
+app.delete("/projets/:id", (req, res) => {
+
+    const id = Number(req.params.id);
+
+    // Vérifier l'identifiant
+    if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({
+            erreur: "Identifiant de projet invalide."
+        });
+    }
+
+    const sql = "DELETE FROM projets WHERE id = ?";
+
+    // Supprimer le projet dans SQLite
+    db.run(sql, [id], function (err) {
 
         if (err) {
             console.error(err.message);
 
             return res.status(500).json({
-                erreur: "Impossible de modifier le statut"
+                erreur: "Erreur lors de la suppression du projet."
             });
         }
- if (this.changes === 0) {
-        return res.status(404).json({
-            erreur: "Projet introuvable"
-        });
-    }
-    res.status(200).json({
-    message: "Statut modifié avec succès",
-    id: id,
-    statut: statut
-});
-    }
-);
 
+        // Vérifier si le projet existe
+        if (this.changes === 0) {
+            return res.status(404).json({
+                erreur: "Projet introuvable."
+            });
+        }
+
+        // Confirmer la suppression
+        return res.status(200).json({
+            message: "Projet supprimé avec succès."
+        });
+    });
+});
+
+
+// ======================================
+// DÉMARRAGE DU SERVEUR
+// ======================================
+
+app.listen(PORT, () => {
+    console.log(`Serveur KërTech Talent démarré sur le port ${PORT}`);
 });
 
 app.listen(PORT, () => {
