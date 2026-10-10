@@ -448,8 +448,8 @@ function ajouterSuppression(
 
 
     boutonSupprimer.addEventListener(
-        "click",
-        function() {
+    "click",
+    async function() {
 
             const confirmation =
                 confirm(
@@ -459,29 +459,25 @@ function ajouterSuppression(
             if (!confirmation) {
                 return;
             }
+            try {
+            const reponse = await fetch(
+    `http://localhost:3000/projets/${projet.id}`,
+    {
+        method: "DELETE"
+    }
+);
+if (!reponse.ok) {
+    messageProjet.textContent =
+        "Erreur lors de la suppression du projet.";
+
+    messageProjet.classList.remove("succes");
+    messageProjet.classList.add("erreur");
+
+    return;
+}
 
 
-            projetsSauvegardes =
-                projetsSauvegardes.filter(
-                    function(projetSauvegarde) {
-
-                        return (
-                            projetSauvegarde.id !==
-                            projet.id
-                        );
-
-                    }
-                );
-
-
-            localStorage.setItem(
-                "projets",
-                JSON.stringify(
-                    projetsSauvegardes
-                )
-            );
-
-
+        
             carteProjet.remove();
 
 
@@ -494,6 +490,15 @@ function ajouterSuppression(
 
 
             filtrerProjets();
+            } catch (erreur) {
+    console.error(erreur);
+
+    messageProjet.textContent =
+        "Impossible de contacter le serveur.";
+
+    messageProjet.classList.remove("succes");
+    messageProjet.classList.add("erreur");
+}
         }
     );
 
@@ -1202,6 +1207,7 @@ try {
         // Succès
         messageProjet.textContent =
             "Votre projet a bien été publié !";
+            messageProjet.classList.remove("erreur");
 
         messageProjet.classList.add(
             "succes"
@@ -1331,19 +1337,123 @@ filtreCategorie.addEventListener(
 
 filtrerFreelances();
 filtrerProjets();
+// =========================
+// CHARGEMENT DES PROJETS
+// =========================
+
 fetch("http://localhost:3000/projets")
     .then((response) => {
+        if (!response.ok) {
+            throw new Error("Impossible de charger les projets.");
+        }
+
         return response.json();
     })
     .then((projets) => {
-
         projets.forEach((projet) => {
-
             projet.candidatures = 0;
             projet.budget = projet.budget ?? "Non renseigné";
 
             creerCarteProjet(projet);
-
         });
 
+        filtrerProjets();
+    })
+    .catch((erreur) => {
+        console.error("Erreur de chargement des projets :", erreur.message);
     });
+    // =========================
+// INSCRIPTION KËRTECH TALENT
+// =========================
+
+const formInscription = document.getElementById("formInscription");
+formInscription.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+    const nomUtilisateur = document.getElementById("nomInscription").value.trim();
+    const emailUtilisateur = document.getElementById("emailInscription").value.trim();
+    const motDePasseUtilisateur = document.getElementById("motDePasseInscription").value;
+    const roleUtilisateur = document.getElementById("roleInscription").value;
+
+console.log("Nom saisi :", nomUtilisateur);
+console.log("Email saisi :", emailUtilisateur);
+console.log("Mot de passe récupéré :", motDePasseUtilisateur.length, "caractères");
+console.log("Rôle choisi :", roleUtilisateur);
+const donneesInscription = {
+    nom: nomUtilisateur,
+    email: emailUtilisateur,
+    mot_de_passe: motDePasseUtilisateur,
+    role: roleUtilisateur
+};
+fetch("http://localhost:3000/inscription", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(donneesInscription)
+})
+.then(async function(response) {
+    const resultat = await response.json();
+
+    if (!response.ok) {
+        throw new Error(resultat.erreur || "Erreur lors de l'inscription.");
+    }
+
+    return resultat;
+})
+.then(function(resultat) {
+    const messageInscription = document.getElementById("messageInscription");
+
+    messageInscription.textContent = resultat.message;
+    messageInscription.style.color = "green";
+    formInscription.reset();
+})
+.catch(function(erreur) {
+
+    const messageInscription = document.getElementById("messageInscription");
+
+    messageInscription.textContent = erreur.message;
+
+    messageInscription.style.color = "red";
+
+});
+    
+
+});
+// =========================
+// CONNEXION KËRTECH TALENT
+// =========================
+
+const formConnexion = document.getElementById("formConnexion");
+formConnexion.addEventListener("submit", function(event) {
+    event.preventDefault();
+    const emailConnexion = document.getElementById("emailConnexion").value.trim();
+    const motDePasseConnexion = document.getElementById("motDePasseConnexion").value;
+    const donneesConnexion = {
+    email: emailConnexion,
+    mot_de_passe: motDePasseConnexion
+};
+fetch("http://localhost:3000/connexion", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(donneesConnexion)
+})
+.then(response => response.json())
+.then(data => {
+    const messageConnexion = document.getElementById("messageConnexion");
+
+    messageConnexion.textContent = data.message || data.erreur;
+      messageConnexion.style.color = data.erreur ? "red" : "green";
+})
+.catch(error => {
+    console.error("Erreur réseau :", error);
+
+    const messageConnexion = document.getElementById("messageConnexion");
+    messageConnexion.textContent = "Impossible de contacter le serveur.";
+    messageConnexion.style.color = "red";
+});
+
+    console.log("Formulaire de connexion détecté !");
+});

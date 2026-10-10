@@ -1,15 +1,160 @@
 const express = require("express");
 const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
+const bcrypt = require("bcrypt");
+const session = require("express-session");
 const app = express();
 const db = new sqlite3.Database("./kertech.db");
-app.use(cors());
+app.use(cors({
+    origin: "http://127.0.0.1:5500",
+    credentials: true
+}));
 app.use(express.json());
 const PORT = 3000;
 
 app.get("/", (req, res) => {
 res.send("Bienvenue sur le serveur KërTech Talent !");
 });
+app.post("/inscription", async (req, res) => {
+    const { nom, email, mot_de_passe, role } = req.body;
+  if (
+    typeof nom !== "string" || nom.trim() === "" ||
+    typeof email !== "string" || email.trim() === "" ||
+    typeof mot_de_passe !== "string" || mot_de_passe.trim() === "" ||
+    typeof role !== "string" || role.trim() === ""
+) {
+    return res.status(400).json({
+        erreur: "Tous les champs sont obligatoires."
+    });
+    
+}
+
+if (role !== "freelance" && role !== "client") {
+    return res.status(400).json({
+        erreur: "Le rôle doit être freelance ou client."
+    });
+
+}
+const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!emailValide.test(email.trim())) {
+    return res.status(400).json({
+        erreur: "Adresse email invalide."
+    });
+}
+if (mot_de_passe.length < 12) {
+    return res.status(400).json({
+        erreur: "Le mot de passe doit contenir au moins 12 caractères."
+        
+    });
+    
+}
+try {
+const motDePasseHash = await bcrypt.hash(mot_de_passe, 12);
+const sql = "INSERT INTO utilisateurs (nom, email, mot_de_passe, role) VALUES (?, ?, ?, ?)";
+
+db.run(
+    sql,
+    [nom.trim(), email.trim().toLowerCase(), motDePasseHash, role],
+    function (err) {
+
+        // 1. Vérifier les erreurs
+        if (err) {
+            console.error(err.message);
+
+            if (err.code === "SQLITE_CONSTRAINT") {
+                return res.status(409).json({
+                    erreur: "Cet email est déjà utilisé ou les données sont invalides."
+                });
+            }
+
+            return res.status(500).json({
+                erreur: "Erreur lors de la création du compte."
+            });
+        }
+
+        // 2. Confirmer la création du compte
+        return res.status(201).json({
+            message: "Compte créé avec succès !",
+            id: this.lastID
+        });
+
+    }
+);
+} catch (err) {
+    console.error("Erreur lors du hachage :", err.message);
+
+    return res.status(500).json({
+        erreur: "Erreur interne lors de l'inscription."
+    });
+}
+
+});
+    // =========================
+// CONNEXION KËRTECH TALENT
+// =========================
+
+app.post("/connexion", async (req, res) => {
+
+    const { email, mot_de_passe } = req.body;
+    if (
+    typeof email !== "string" || email.trim() === "" ||
+    typeof mot_de_passe !== "string" || mot_de_passe === ""
+) {
+    return res.status(400).json({
+        erreur: "Email et mot de passe obligatoires."
+        
+    });
+    
+}
+    const sql = "SELECT * FROM utilisateurs WHERE email = ?";
+    db.get(sql, [email.trim().toLowerCase()], async (err, utilisateur) => {
+        if (err) {
+    console.error("Erreur SQLite :", err.message);
+
+    return res.status(500).json({
+        erreur: "Erreur interne du serveur."
+    });
+    
+}
+if (!utilisateur) {
+    return res.status(401).json({
+        erreur: "Email ou mot de passe incorrect."
+        
+    });
+    
+}
+
+
+try {
+const motDePasseValide = await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe);
+if (!motDePasseValide) {
+    return res.status(401).json({
+        erreur: "Email ou mot de passe incorrect."
+    });
+}
+} catch (err) {
+    console.error("Erreur bcrypt :", err.message);
+
+    return res.status(500).json({
+        erreur: "Erreur interne du serveur."
+    });
+    
+}
+return res.status(200).json({
+    message: "Connexion réussie !",
+    utilisateur: {
+        id: utilisateur.id,
+        nom: utilisateur.nom,
+        role: utilisateur.role
+    }
+    });
+});
+});
+
+
+
+
 
 
 
@@ -34,6 +179,7 @@ app.post("/projets", (req, res) => {
         console.error(err.message);
         return res.status(500).json({
             erreur: "Erreur lors de la création du projet"
+            
         });
         
     }
@@ -149,9 +295,6 @@ app.delete("/projets/:id", (req, res) => {
 // DÉMARRAGE DU SERVEUR
 // ======================================
 
-app.listen(PORT, () => {
-    console.log(`Serveur KërTech Talent démarré sur le port ${PORT}`);
-});
 
 app.listen(PORT, () => {
         console.log(`Serveur KërTech Talent démarré sur le port ${PORT}`);
