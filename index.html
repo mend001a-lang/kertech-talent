@@ -340,9 +340,9 @@
         placeholder="Présentez votre candidature..."
     ></textarea>
 
-    <button class="envoyer-candidature">
-        Envoyer ma candidature
-    </button>
+    <<button type="button" class="envoyer-candidature">
+    Envoyer ma candidature
+</button>
 
     <p class="message-succes-candidature"></p>
 
@@ -381,9 +381,9 @@
         placeholder="Présentez votre candidature..."
     ></textarea>
 
-    <button class="envoyer-candidature">
-        Envoyer ma candidature
-    </button>
+    <button type="button" class="envoyer-candidature">
+    Envoyer ma candidature
+</button>
 
     <p class="message-succes-candidature"></p>
 
@@ -421,9 +421,9 @@
         placeholder="Présentez votre candidature..."
     ></textarea>
 
-    <button class="envoyer-candidature">
-        Envoyer ma candidature
-    </button>
+    <button type="button" class="envoyer-candidature">
+    Envoyer ma candidature
+</button>
 
     <p class="message-succes-candidature"></p>
 
@@ -627,6 +627,120 @@
             </form>
 
         </section>
+<!-- =========================
+     INSCRIPTION
+========================== -->
+
+<section id="inscription">
+
+    <h2>Créer un compte KërTech Talent</h2>
+
+    <p>
+        Rejoignez notre communauté de freelances et de clients.
+    </p>
+
+</section>
+<form id="formInscription">
+    <label for="nomInscription">Nom complet :</label>
+
+<input
+    type="text"
+    id="nomInscription"
+    name="nom"
+    required
+>
+<label for="emailInscription">Adresse email :</label>
+
+<input
+    type="email"
+    id="emailInscription"
+    name="email"
+    required
+>
+<label for="motDePasseInscription">Mot de passe :</label>
+
+<input
+    type="password"
+    id="motDePasseInscription"
+    name="mot_de_passe"
+    minlength="12"
+    autocomplete="new-password"
+    required
+><label for="roleInscription">Vous êtes :</label>
+
+<select
+    id="roleInscription"
+    name="role"
+    required
+>
+    <option value="">Choisissez votre profil</option>
+    <option value="freelance">Freelance</option>
+    <option value="client">Client</option>
+</select>
+<button type="submit" id="btnInscription">
+    Créer mon compte
+</button>
+
+<p id="messageInscription" aria-live="polite"></p>
+</form>
+<!-- =========================
+     CONNEXION KËRTECH TALENT
+========================= -->
+
+<section id="connexion">
+    <h2>Connexion KërTech Talent</h2>
+
+    <p>Connectez-vous à votre compte.</p>
+    <form id="formConnexion">
+    <label for="emailConnexion">Adresse email :</label>
+    <input type="email" id="emailConnexion" name="email" required>
+
+    <label for="motDePasseConnexion">Mot de passe :</label>
+    <input
+        type="password"
+        id="motDePasseConnexion"
+        name="mot_de_passe"
+        autocomplete="current-password"
+        required
+    >
+
+    <button type="submit" id="btnConnexion">
+        Se connecter
+    </button>
+
+    <p id="messageConnexion" aria-live="polite"></p>
+</form>
+
+<!-- Bouton de déconnexion -->
+<button type="button" id="btnDeconnexion" hidden>
+    Se déconnecter
+</button>
+<!-- Message de bienvenue de l'utilisateur connecté -->
+<div id="espaceUtilisateur" hidden>
+    <h3 id="bienvenueUtilisateur"></h3>
+    <p id="roleUtilisateur"></p>
+</div>
+
+</section>
+
+<!-- =========================
+     MES CANDIDATURES - FREELANCE
+========================== -->
+
+<section id="mesCandidatures" hidden>
+
+    <h2>Mes candidatures</h2>
+
+    <p>
+        Retrouvez ici les projets auxquels vous avez candidaté
+        et suivez l'évolution de vos candidatures.
+    </p>
+
+    <div id="listeMesCandidatures"></div>
+
+    <p id="messageMesCandidatures"></p>
+
+</section>
 
     </main>
 

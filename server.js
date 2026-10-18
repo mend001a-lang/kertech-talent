@@ -1,301 +1,1127 @@
+
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const session = require("express-session");
+
 const app = express();
 const db = new sqlite3.Database("./kertech.db");
+const PORT = 3000;
+
+// =====================================
+// CONFIGURATION DU SERVEUR
+// =====================================
+
 app.use(cors({
     origin: "http://127.0.0.1:5500",
     credentials: true
 }));
+
 app.use(express.json());
-const PORT = 3000;
+
+app.use(session({
+    name: "kertech.sid",
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}));
+
+// =====================================
+// TABLE DES CANDIDATURES
+// =====================================
+
+db.run(`
+    CREATE TABLE IF NOT EXISTS candidatures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        projet_id INTEGER NOT NULL,
+        freelance_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        statut TEXT NOT NULL DEFAULT 'En attente',
+        date_candidature DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (projet_id) REFERENCES projets(id),
+        FOREIGN KEY (freelance_id) REFERENCES utilisateurs(id)
+    )
+`, (err) => {
+    if (err) {
+        console.error("Erreur table candidatures :", err.message);
+    } else {
+        console.log("Table candidatures prête !");
+    }
+});
+
+// =====================================
+// ACCUEIL
+// =====================================
 
 app.get("/", (req, res) => {
-res.send("Bienvenue sur le serveur KërTech Talent !");
+    res.send("Bienvenue sur le serveur KërTech Talent !");
 });
+
+// =====================================
+// INSCRIPTION
+// =====================================
+
 app.post("/inscription", async (req, res) => {
-    const { nom, email, mot_de_passe, role } = req.body;
-  if (
-    typeof nom !== "string" || nom.trim() === "" ||
-    typeof email !== "string" || email.trim() === "" ||
-    typeof mot_de_passe !== "string" || mot_de_passe.trim() === "" ||
-    typeof role !== "string" || role.trim() === ""
-) {
-    return res.status(400).json({
-        erreur: "Tous les champs sont obligatoires."
-    });
-    
-}
+    const { nom, email, mot_de_passe, role } = req.body || {};
 
-if (role !== "freelance" && role !== "client") {
-    return res.status(400).json({
-        erreur: "Le rôle doit être freelance ou client."
-    });
+    if (
+        typeof nom !== "string" || nom.trim() === "" ||
+        typeof email !== "string" || email.trim() === "" ||
+        typeof mot_de_passe !== "string" || mot_de_passe.trim() === "" ||
+        typeof role !== "string" || role.trim() === ""
+    ) {
+        return res.status(400).json({
+            erreur: "Tous les champs sont obligatoires."
+        });
+    }
 
-}
-const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (role !== "freelance" && role !== "client") {
+        return res.status(400).json({
+            erreur: "Le rôle doit être freelance ou client."
+        });
+    }
 
-if (!emailValide.test(email.trim())) {
-    return res.status(400).json({
-        erreur: "Adresse email invalide."
-    });
-}
-if (mot_de_passe.length < 12) {
-    return res.status(400).json({
-        erreur: "Le mot de passe doit contenir au moins 12 caractères."
-        
-    });
-    
-}
-try {
-const motDePasseHash = await bcrypt.hash(mot_de_passe, 12);
-const sql = "INSERT INTO utilisateurs (nom, email, mot_de_passe, role) VALUES (?, ?, ?, ?)";
+    const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-db.run(
-    sql,
-    [nom.trim(), email.trim().toLowerCase(), motDePasseHash, role],
-    function (err) {
+    if (!emailValide.test(email.trim())) {
+        return res.status(400).json({
+            erreur: "Adresse email invalide."
+        });
+    }
 
-        // 1. Vérifier les erreurs
-        if (err) {
-            console.error(err.message);
+    if (mot_de_passe.length < 12) {
+        return res.status(400).json({
+            erreur: "Le mot de passe doit contenir au moins 12 caractères."
+        });
+    }
 
-            if (err.code === "SQLITE_CONSTRAINT") {
-                return res.status(409).json({
-                    erreur: "Cet email est déjà utilisé ou les données sont invalides."
+    try {
+        const motDePasseHash = await bcrypt.hash(mot_de_passe, 12);
+
+        const sql = `
+            INSERT INTO utilisateurs
+            (nom, email, mot_de_passe, role)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        db.run(
+            sql,
+            [
+                nom.trim(),
+                email.trim().toLowerCase(),
+                motDePasseHash,
+                role
+            ],
+            function (err) {
+                if (err) {
+                    console.error(err.message);
+
+                    if (err.code === "SQLITE_CONSTRAINT") {
+                        return res.status(409).json({
+                            erreur: "Cet email est déjà utilisé ou les données sont invalides."
+                        });
+                    }
+
+                    return res.status(500).json({
+                        erreur: "Erreur lors de la création du compte."
+                    });
+                }
+
+                return res.status(201).json({
+                    message: "Compte créé avec succès !",
+                    id: this.lastID
+                });
+            }
+        );
+    } catch (err) {
+        console.error("Erreur inscription :", err.message);
+
+        return res.status(500).json({
+            erreur: "Erreur interne lors de l'inscription."
+        });
+    }
+});
+
+// =====================================
+// CONNEXION
+// =====================================
+
+app.post("/connexion", (req, res) => {
+    const { email, mot_de_passe } = req.body || {};
+
+    if (
+        typeof email !== "string" || email.trim() === "" ||
+        typeof mot_de_passe !== "string" || mot_de_passe === ""
+    ) {
+        return res.status(400).json({
+            erreur: "Email et mot de passe obligatoires."
+        });
+    }
+
+    const sql = "SELECT * FROM utilisateurs WHERE email = ?";
+
+    db.get(
+        sql,
+        [email.trim().toLowerCase()],
+        async (err, utilisateur) => {
+            if (err) {
+                console.error("Erreur SQLite :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur interne du serveur."
                 });
             }
 
+            if (!utilisateur) {
+                return res.status(401).json({
+                    erreur: "Email ou mot de passe incorrect."
+                });
+            }
+
+            let motDePasseValide;
+
+            try {
+                motDePasseValide = await bcrypt.compare(
+                    mot_de_passe,
+                    utilisateur.mot_de_passe
+                );
+            } catch (err) {
+                console.error("Erreur bcrypt :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur interne du serveur."
+                });
+            }
+
+            if (!motDePasseValide) {
+                return res.status(401).json({
+                    erreur: "Email ou mot de passe incorrect."
+                });
+            }
+
+            req.session.regenerate((err) => {
+                if (err) {
+                    console.error("Erreur session :", err.message);
+
+                    return res.status(500).json({
+                        erreur: "Impossible de créer la session."
+                    });
+                }
+
+                req.session.userId = utilisateur.id;
+
+                req.session.save((err) => {
+                    if (err) {
+                        console.error("Erreur sauvegarde session :", err.message);
+
+                        return res.status(500).json({
+                            erreur: "Impossible d'enregistrer la session."
+                        });
+                    }
+
+                    return res.status(200).json({
+                        message: "Connexion réussie !",
+                        utilisateur: {
+                            id: utilisateur.id,
+                            nom: utilisateur.nom,
+                            role: utilisateur.role
+                        }
+                    });
+                });
+            });
+        }
+    );
+});
+
+// =====================================
+// VÉRIFIER LA SESSION
+// =====================================
+
+app.get("/session", (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({
+            connecte: false,
+            message: "Aucun utilisateur connecté."
+        });
+    }
+
+    const sql = `
+        SELECT id, nom, role
+        FROM utilisateurs
+        WHERE id = ?
+    `;
+
+    db.get(sql, [req.session.userId], (err, utilisateur) => {
+        if (err) {
+            console.error("Erreur SQLite :", err.message);
+
             return res.status(500).json({
-                erreur: "Erreur lors de la création du compte."
+                erreur: "Erreur interne du serveur."
             });
         }
 
-        // 2. Confirmer la création du compte
-        return res.status(201).json({
-            message: "Compte créé avec succès !",
-            id: this.lastID
+        if (!utilisateur) {
+            return res.status(401).json({
+                connecte: false,
+                message: "Utilisateur introuvable."
+            });
+        }
+
+        return res.status(200).json({
+            connecte: true,
+            message: "Utilisateur connecté.",
+            utilisateur: {
+                id: utilisateur.id,
+                nom: utilisateur.nom,
+                role: utilisateur.role
+            }
         });
-
-    }
-);
-} catch (err) {
-    console.error("Erreur lors du hachage :", err.message);
-
-    return res.status(500).json({
-        erreur: "Erreur interne lors de l'inscription."
-    });
-}
-
-});
-    // =========================
-// CONNEXION KËRTECH TALENT
-// =========================
-
-app.post("/connexion", async (req, res) => {
-
-    const { email, mot_de_passe } = req.body;
-    if (
-    typeof email !== "string" || email.trim() === "" ||
-    typeof mot_de_passe !== "string" || mot_de_passe === ""
-) {
-    return res.status(400).json({
-        erreur: "Email et mot de passe obligatoires."
-        
-    });
-    
-}
-    const sql = "SELECT * FROM utilisateurs WHERE email = ?";
-    db.get(sql, [email.trim().toLowerCase()], async (err, utilisateur) => {
-        if (err) {
-    console.error("Erreur SQLite :", err.message);
-
-    return res.status(500).json({
-        erreur: "Erreur interne du serveur."
-    });
-    
-}
-if (!utilisateur) {
-    return res.status(401).json({
-        erreur: "Email ou mot de passe incorrect."
-        
-    });
-    
-}
-
-
-try {
-const motDePasseValide = await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe);
-if (!motDePasseValide) {
-    return res.status(401).json({
-        erreur: "Email ou mot de passe incorrect."
-    });
-}
-} catch (err) {
-    console.error("Erreur bcrypt :", err.message);
-
-    return res.status(500).json({
-        erreur: "Erreur interne du serveur."
-    });
-    
-}
-return res.status(200).json({
-    message: "Connexion réussie !",
-    utilisateur: {
-        id: utilisateur.id,
-        nom: utilisateur.nom,
-        role: utilisateur.role
-    }
     });
 });
-});
 
-
-
-
-
+    
+// =====================================
+// LISTE DES PROJETS
+// =====================================
 
 
 app.get("/projets", (req, res) => {
-    db.all("SELECT * FROM projets", (err, projets) => {
+
+    const sql = `
+        SELECT
+            p.*,
+            (
+                SELECT COUNT(*)
+                FROM candidatures AS c
+                WHERE c.projet_id = p.id
+            ) AS candidatures
+        FROM projets AS p
+    `;
+
+    db.all(sql, (err, projets) => {
+
         if (err) {
-            console.error(err.message);
-            return res.status(500).json({ erreur: "Erreur serveur" });
+            console.error("Erreur projets :", err.message);
+
+            return res.status(500).json({
+                erreur: "Impossible de récupérer les projets."
+            });
         }
 
-        res.json(projets);
+        return res.status(200).json(projets);
     });
 });
+
+
+
+// =====================================
+// PUBLIER UN PROJET (CLIENT)
+// =====================================
+
 app.post("/projets", (req, res) => {
-    console.log(req.body);
-   const { titre, description, budget, categorie, statut } = req.body;
-   db.run(
-    `INSERT INTO projets (titre, description, budget, categorie, statut) VALUES (?, ?, ?, ?, ?)`,
-    [titre, description, budget, categorie, statut],
-    function (err) {
-    if (err) {
-        console.error(err.message);
-        return res.status(500).json({
-            erreur: "Erreur lors de la création du projet"
-            
-        });
-        
-    }
 
-    console.log("Projet enregistré avec l'id :", this.lastID);
-    res.status(201).json({
-    message: "Projet créé avec succès",
-    id: this.lastID
-});
-}
-);
-
-   
-});
-// Modification du statut d'un projet
-// ======================================
-// MODIFIER LE STATUT D'UN PROJET (PATCH)
-// ======================================
-
-app.patch("/projets/:id", (req, res) => {
-
-    const id = Number(req.params.id);
-    const { statut } = req.body;
-
-    // Vérifier l'identifiant
-    if (!Number.isSafeInteger(id) || id <= 0) {
-        return res.status(400).json({
-            erreur: "Identifiant de projet invalide"
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté pour publier un projet."
         });
     }
 
-    // Vérifier le statut
-    if (!["Ouvert", "En cours", "Terminé"].includes(statut)) {
-        return res.status(400).json({
-            erreur: "Statut invalide"
-        });
-    }
-
-    // Modifier le statut dans SQLite
-    db.run(
-        "UPDATE projets SET statut = ? WHERE id = ?",
-        [statut, id],
-        function (err) {
+    // 2. Vérifier le rôle client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
 
             if (err) {
-                console.error(err.message);
+                console.error("Erreur utilisateur :", err.message);
 
                 return res.status(500).json({
-                    erreur: "Impossible de modifier le statut"
+                    erreur: "Erreur de vérification du compte."
                 });
             }
 
-            if (this.changes === 0) {
-                return res.status(404).json({
-                    erreur: "Projet introuvable"
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Seuls les clients peuvent publier un projet."
                 });
             }
 
-            return res.status(200).json({
-                message: "Statut modifié avec succès",
-                id: id,
-                statut: statut
+            // 3. Récupérer les informations du projet
+            const {
+                titre,
+                description,
+                budget,
+                categorie
+            } = req.body || {};
+
+            // 4. Valider les champs obligatoires
+            if (
+                typeof titre !== "string" ||
+                titre.trim() === "" ||
+                typeof description !== "string" ||
+                description.trim() === ""
+            ) {
+                return res.status(400).json({
+                    erreur: "Le titre et la description sont obligatoires."
+                });
+            }
+
+            // 5. Enregistrer le projet avec son propriétaire
+            db.run(
+                `INSERT INTO projets
+                 (titre, description, budget, categorie, statut, client_id)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    titre.trim(),
+                    description.trim(),
+                    budget ?? null,
+                    categorie ?? null,
+                    "ouvert",
+                    req.session.userId
+                ],
+                function (err) {
+
+                    if (err) {
+                        console.error("Erreur publication :", err.message);
+
+                        return res.status(500).json({
+                            erreur: "Erreur lors de la création du projet."
+                        });
+                    }
+
+                    return res.status(201).json({
+                        message: "Projet créé avec succès !",
+                        id: this.lastID
+                    });
+                }
+            );
+        }
+    );
+});
+
+
+// =====================================
+// ENVOYER UNE CANDIDATURE (FREELANCE)
+// =====================================
+
+app.post("/candidatures", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté pour postuler."
+        });
+    }
+
+    // 2. Récupérer et valider les données
+    const { projet_id, message } = req.body || {};
+
+    if (
+        !Number.isSafeInteger(projet_id) ||
+        projet_id <= 0 ||
+        typeof message !== "string" ||
+        message.trim() === ""
+    ) {
+        return res.status(400).json({
+            erreur: "Projet ou message invalide."
+        });
+    }
+
+    // 3. Vérifier le rôle freelance
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                console.error("Erreur utilisateur :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "freelance") {
+                return res.status(403).json({
+                    erreur: "Seuls les freelances peuvent postuler."
+                });
+            }
+
+            // 4. Vérifier que le projet est ouvert
+            db.get(
+                "SELECT id, statut FROM projets WHERE id = ?",
+                [projet_id],
+                (err, projet) => {
+
+                    if (err) {
+                        console.error("Erreur projet :", err.message);
+
+                        return res.status(500).json({
+                            erreur: "Erreur de vérification du projet."
+                        });
+                    }
+
+                    if (!projet) {
+                        return res.status(404).json({
+                            erreur: "Projet introuvable."
+                        });
+                    }
+
+                    if (
+                        typeof projet.statut !== "string" ||
+                        projet.statut.toLowerCase() !== "ouvert"
+                    ) {
+                        return res.status(403).json({
+                            erreur: "Ce projet n'accepte plus de candidatures."
+                        });
+                    }
+
+                    // 5. Enregistrer la candidature
+                    db.run(
+                        `INSERT INTO candidatures
+                         (projet_id, freelance_id, message, statut)
+                         VALUES (?, ?, ?, ?)`,
+                        [
+                            projet_id,
+                            req.session.userId,
+                            message.trim(),
+                            "En attente"
+                        ],
+                        function (err) {
+
+                            if (err) {
+                                console.error("Erreur candidature :", err.message);
+
+                                return res.status(500).json({
+                                    erreur: "Impossible d'enregistrer la candidature."
+                                });
+                            }
+
+                            return res.status(201).json({
+                                message: "Candidature envoyée avec succès !",
+                                id: this.lastID
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+
+// =====================================
+// CONSULTER LES CANDIDATURES (CLIENT)
+// =====================================
+
+app.get("/projets/:id/candidatures", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Valider l'identifiant du projet
+    const projetId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(projetId) || projetId <= 0) {
+        return res.status(400).json({
+            erreur: "Identifiant du projet invalide."
+        });
+    }
+
+    // 3. Vérifier le rôle client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                console.error("Erreur utilisateur :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux clients."
+                });
+            }
+
+            // 4. Vérifier que le client possède le projet
+            db.get(
+                `SELECT id FROM projets
+                 WHERE id = ? AND client_id = ?`,
+                [projetId, req.session.userId],
+                (err, projet) => {
+
+                    if (err) {
+                        console.error("Erreur propriétaire :", err.message);
+
+                        return res.status(500).json({
+                            erreur: "Erreur de vérification du projet."
+                        });
+                    }
+
+                    if (!projet) {
+                        return res.status(403).json({
+                            erreur: "Vous ne pouvez pas consulter les candidatures de ce projet."
+                        });
+                    }
+
+                    // 5. Récupérer les candidatures et les noms
+                    db.all(
+                        `SELECT
+                            c.id,
+                            c.projet_id,
+                            c.freelance_id,
+                            c.message,
+                            c.statut,
+                            c.date_candidature,
+                            u.nom AS freelance_nom
+                         FROM candidatures AS c
+                         JOIN utilisateurs AS u
+                         ON c.freelance_id = u.id
+                         WHERE c.projet_id = ?
+                         ORDER BY c.date_candidature DESC, c.id DESC`,
+                        [projetId],
+                        (err, candidatures) => {
+
+                            if (err) {
+                                console.error("Erreur candidatures :", err.message);
+
+                                return res.status(500).json({
+                                    erreur: "Impossible de récupérer les candidatures."
+                                });
+                            }
+
+                            return res.status(200).json(candidatures);
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+
+
+/* ==========================================
+   MES CANDIDATURES - ESPACE FREELANCE
+========================================== */
+
+app.get("/mes-candidatures", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier le rôle freelance
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "freelance") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux freelances."
+                });
+            }
+
+            // 3. Récupérer uniquement ses candidatures
+            const sql = `
+                SELECT
+                    c.id,
+                    c.projet_id,
+                    c.message,
+                    c.statut,
+                    c.date_candidature,
+                    p.titre AS projet_titre
+                FROM candidatures AS c
+                JOIN projets AS p ON c.projet_id = p.id
+                WHERE c.freelance_id = ?
+                ORDER BY c.date_candidature DESC, c.id DESC
+            `;
+
+            db.all(sql, [req.session.userId], (err, candidatures) => {
+
+                if (err) {
+                    console.error("Erreur mes candidatures :", err.message);
+
+                    return res.status(500).json({
+                        erreur: "Impossible de récupérer vos candidatures."
+                    });
+                }
+
+                return res.status(200).json(candidatures);
             });
         }
     );
 });
 
 
-// ======================================
-// SUPPRIMER UN PROJET (DELETE)
-// ======================================
 
-app.delete("/projets/:id", (req, res) => {
+/* ==========================================
+   ACCEPTER UNE CANDIDATURE
+========================================== */
 
-    const id = Number(req.params.id);
+app.patch("/candidatures/:id/accepter", (req, res) => {
 
-    // Vérifier l'identifiant
-    if (!Number.isSafeInteger(id) || id <= 0) {
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier l'identifiant
+    const candidatureId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(candidatureId) || candidatureId <= 0) {
+        return res.status(400).json({
+            erreur: "Identifiant de candidature invalide."
+        });
+    }
+
+    // 3. Vérifier que l'utilisateur est client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux clients."
+                });
+            }
+
+            // 4. Vérifier que la candidature appartient
+            // à un projet possédé par ce client
+            db.get(
+                `SELECT c.id, c.statut
+                 FROM candidatures AS c
+                 JOIN projets AS p ON c.projet_id = p.id
+                 WHERE c.id = ? AND p.client_id = ?`,
+                [candidatureId, req.session.userId],
+                (err, candidature) => {
+
+                    if (err) {
+                        return res.status(500).json({
+                            erreur: "Erreur de vérification de la candidature."
+                        });
+                    }
+
+                    if (!candidature) {
+                        return res.status(403).json({
+                            erreur: "Candidature introuvable ou accès interdit."
+                        });
+                    }
+
+                    // 5. Accepter uniquement une candidature en attente
+                    if (candidature.statut !== "En attente") {
+                        return res.status(409).json({
+                            erreur: "Cette candidature n'est plus en attente."
+                        });
+                    }
+
+                    // 6. Enregistrer l'acceptation dans SQLite
+                    db.run(
+                        `UPDATE candidatures
+                         SET statut = ?
+                         WHERE id = ? AND statut = ?`,
+                        ["Acceptée", candidatureId, "En attente"],
+                        function(err) {
+
+                            if (err) {
+                                return res.status(500).json({
+                                    erreur: "Impossible d'accepter la candidature."
+                                });
+                            }
+
+                            if (this.changes === 0) {
+                                return res.status(409).json({
+                                    erreur: "La candidature a déjà changé de statut."
+                                });
+                            }
+
+                            return res.status(200).json({
+                                message: "Candidature acceptée avec succès.",
+                                candidature_id: candidatureId,
+                                statut: "Acceptée"
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+    
+/* ==========================================
+   REFUSER UNE CANDIDATURE
+========================================== */
+
+app.patch("/candidatures/:id/refuser", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier l'identifiant
+    const candidatureId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(candidatureId) || candidatureId <= 0) {
+        return res.status(400).json({
+            erreur: "Identifiant de candidature invalide."
+        });
+    }
+
+    // 3. Vérifier le rôle client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux clients."
+                });
+            }
+
+            // 4. Vérifier que le client possède le projet
+            db.get(
+                `SELECT c.id, c.statut
+                 FROM candidatures AS c
+                 JOIN projets AS p ON c.projet_id = p.id
+                 WHERE c.id = ? AND p.client_id = ?`,
+                [candidatureId, req.session.userId],
+                (err, candidature) => {
+
+                    if (err) {
+                        return res.status(500).json({
+                            erreur: "Erreur de vérification de la candidature."
+                        });
+                    }
+
+                    if (!candidature) {
+                        return res.status(403).json({
+                            erreur: "Candidature introuvable ou accès interdit."
+                        });
+                    }
+
+                    // 5. Refuser uniquement une candidature en attente
+                    if (candidature.statut !== "En attente") {
+                        return res.status(409).json({
+                            erreur: "Cette candidature n'est plus en attente."
+                        });
+                    }
+
+                    // 6. Enregistrer le refus dans SQLite
+                    db.run(
+                        `UPDATE candidatures
+                         SET statut = ?
+                         WHERE id = ? AND statut = ?`,
+                        ["Refusée", candidatureId, "En attente"],
+                        function(err) {
+
+                            if (err) {
+                                return res.status(500).json({
+                                    erreur: "Impossible de refuser la candidature."
+                                });
+                            }
+
+                            if (this.changes === 0) {
+                                return res.status(409).json({
+                                    erreur: "La candidature a déjà changé de statut."
+                                });
+                            }
+
+                            return res.status(200).json({
+                                message: "Candidature refusée avec succès.",
+                                candidature_id: candidatureId,
+                                statut: "Refusée"
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+// =====================================
+// MODIFIER LE STATUT D'UN PROJET (CLIENT)
+// =====================================
+
+app.patch("/projets/:id", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier l'identifiant du projet
+    const projetId = Number(req.params.id);
+    const { statut } = req.body || {};
+
+    if (!Number.isSafeInteger(projetId) || projetId <= 0) {
         return res.status(400).json({
             erreur: "Identifiant de projet invalide."
         });
     }
 
-    const sql = "DELETE FROM projets WHERE id = ?";
+    // 3. Vérifier le nouveau statut
+    const statutsAutorises = ["ouvert", "En cours", "Terminé"];
 
-    // Supprimer le projet dans SQLite
-    db.run(sql, [id], function (err) {
+    if (!statutsAutorises.includes(statut)) {
+        return res.status(400).json({
+            erreur: "Statut invalide."
+        });
+    }
+
+    // 4. Vérifier le rôle client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                console.error("Erreur utilisateur :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux clients."
+                });
+            }
+
+            // 5. Modifier uniquement un projet du client
+            db.run(
+                `UPDATE projets
+                 SET statut = ?
+                 WHERE id = ? AND client_id = ?`,
+                [statut, projetId, req.session.userId],
+                function (err) {
+
+                    if (err) {
+                        console.error("Erreur modification :", err.message);
+
+                        return res.status(500).json({
+                            erreur: "Impossible de modifier le statut."
+                        });
+                    }
+
+                    if (this.changes === 0) {
+                        return res.status(404).json({
+                            erreur: "Projet introuvable ou accès non autorisé."
+                        });
+                    }
+
+                    return res.status(200).json({
+                        message: "Statut modifié avec succès !",
+                        id: projetId,
+                        statut: statut
+                    });
+                }
+            );
+        }
+    );
+});
+
+
+// =====================================
+// SUPPRIMER UN PROJET (CLIENT)
+// =====================================
+
+app.delete("/projets/:id", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier l'identifiant
+    const projetId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(projetId) || projetId <= 0) {
+        return res.status(400).json({
+            erreur: "Identifiant de projet invalide."
+        });
+    }
+
+    // 3. Vérifier le rôle client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+
+            if (err) {
+                console.error("Erreur utilisateur :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux clients."
+                });
+            }
+
+            // 4. Vérifier que le projet appartient au client
+            db.get(
+                `SELECT id FROM projets
+                 WHERE id = ? AND client_id = ?`,
+                [projetId, req.session.userId],
+                (err, projet) => {
+
+                    if (err) {
+                        console.error("Erreur projet :", err.message);
+
+                        return res.status(500).json({
+                            erreur: "Erreur de vérification du projet."
+                        });
+                    }
+
+                    if (!projet) {
+                        return res.status(404).json({
+                            erreur: "Projet introuvable ou accès non autorisé."
+                        });
+                    }
+
+                    // 5. Supprimer les candidatures associées
+                    db.run(
+                        "DELETE FROM candidatures WHERE projet_id = ?",
+                        [projetId],
+                        function (err) {
+
+                            if (err) {
+                                console.error("Erreur candidatures :", err.message);
+
+                                return res.status(500).json({
+                                    erreur: "Impossible de supprimer les candidatures."
+                                });
+                            }
+
+                            // 6. Supprimer le projet du client
+                            db.run(
+                                `DELETE FROM projets
+                                 WHERE id = ? AND client_id = ?`,
+                                [projetId, req.session.userId],
+                                function (err) {
+
+                                    if (err) {
+                                        console.error("Erreur suppression :", err.message);
+
+                                        return res.status(500).json({
+                                            erreur: "Impossible de supprimer le projet."
+                                        });
+                                    }
+
+                                    if (this.changes === 0) {
+                                        return res.status(404).json({
+                                            erreur: "Projet introuvable ou accès non autorisé."
+                                        });
+                                    }
+
+                                    return res.status(200).json({
+                                        message: "Projet supprimé avec succès !"
+                                    });
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+
+// =====================================
+// DÉCONNEXION
+// =====================================
+
+app.post("/deconnexion", (req, res) => {
+
+    req.session.destroy((err) => {
 
         if (err) {
-            console.error(err.message);
+            console.error("Erreur déconnexion :", err.message);
 
             return res.status(500).json({
-                erreur: "Erreur lors de la suppression du projet."
+                erreur: "Impossible de se déconnecter."
             });
         }
 
-        // Vérifier si le projet existe
-        if (this.changes === 0) {
-            return res.status(404).json({
-                erreur: "Projet introuvable."
-            });
-        }
+        res.clearCookie("kertech.sid", {
+            path: "/",
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax"
+        });
 
-        // Confirmer la suppression
         return res.status(200).json({
-            message: "Projet supprimé avec succès."
+            message: "Déconnexion réussie !"
         });
     });
 });
 
 
-// ======================================
+// =====================================
 // DÉMARRAGE DU SERVEUR
-// ======================================
-
+// =====================================
 
 app.listen(PORT, () => {
-        console.log(`Serveur KërTech Talent démarré sur le port ${PORT}`);
+    console.log(
+        `Serveur KërTech Talent démarré sur le port ${PORT}`
+    );
 });

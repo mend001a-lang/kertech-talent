@@ -12,7 +12,15 @@ db.run(`
         budget REAL
     )
 `);
-
+db.run(`
+    CREATE TABLE IF NOT EXISTS utilisateurs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nom TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        mot_de_passe TEXT NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('freelance', 'client'))
+    )
+`);
 
 
 db.all("SELECT * FROM projets", (err, projets) => {

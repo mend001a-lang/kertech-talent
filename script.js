@@ -291,73 +291,102 @@ function activerCandidature(carteProjet, projet) {
         }
     );
 
-
-    // Effacer l'ancien succès
-    messageCandidature.addEventListener(
-        "input",
-        function() {
-
-            messageSuccesCandidature.textContent =
-                "";
-
-        }
-    );
+ // Détecter la saisie dans le champ de candidature
+messageCandidature.addEventListener(
+    "input",
+    function() {
+        console.log("TEST KTT : événement input déclenché !");
+    }
+);
 
 
     // Envoyer candidature
-    envoyerCandidature.addEventListener(
-        "click",
-        function() {
+    // =====================================
+// ENVOYER UNE CANDIDATURE À SQLITE
+// =====================================
 
-            const messageUtilisateur =
-                messageCandidature.value.trim();
+envoyerCandidature.addEventListener("click", async function(event) {
+    event.preventDefault();
 
-            if (messageUtilisateur === "") {
+    const messageUtilisateur = messageCandidature.value.trim();
 
-                alert(
-                    "Veuillez écrire un message de candidature."
-                );
-
-                return;
-            }
-
-            const titre =
-                carteProjet
-                    .querySelector("h3")
-                    .textContent;
-
-            messageSuccesCandidature.textContent =
-                "Candidature envoyée pour le projet : "
-                + titre
-                + " !";
-                if (!projet.listeCandidatures) {
-    projet.listeCandidatures = [];
-}
-projet.listeCandidatures.push({
-    message: messageUtilisateur,
-    statut: "En attente"
-});
-       projet.candidatures =
-    (projet.candidatures || 0) + 1;
-
-const compteurCandidatures =
-    carteProjet.querySelector(".compteur-candidatures");
-
-if (compteurCandidatures) {
-    compteurCandidatures.textContent =
-        "Candidatures : " + projet.candidatures;
-}
-
-if (projet.cleSauvegarde) {
-    localStorage.setItem(
-        projet.cleSauvegarde,
-        JSON.stringify(projet)
-    );
-}
-messageCandidature.value = "";
-
+    // 1. Vérifier le message
+    if (messageUtilisateur === "") {
+        messageSuccesCandidature.textContent =
+            "Veuillez écrire un message de candidature.";
+        return;
     }
-);
+
+    // 2. Vérifier l'identifiant du projet
+    if (!projet.id) {
+        messageSuccesCandidature.textContent =
+            "Impossible d'identifier ce projet.";
+        return;
+    }
+
+    // 3. Préparer la candidature
+    const candidatureAPI = {
+        projet_id: Number(projet.id),
+        message: messageUtilisateur
+    };
+
+    // 4. Envoyer au serveur
+    try {
+        envoyerCandidature.disabled = true;
+
+        const reponse = await fetch(
+            "http://127.0.0.1:3000/candidatures",
+            {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(candidatureAPI)
+            }
+        );
+
+        const resultat = await reponse.json();
+
+        if (!reponse.ok) {
+            messageSuccesCandidature.textContent =
+                resultat.erreur || "Erreur lors de la candidature.";
+            return;
+        }
+
+       // Afficher le message de succès
+messageSuccesCandidature.textContent =
+    "Candidature enregistrée avec succès !";
+
+// Effacer le message après 5 secondes
+setTimeout(() => {
+    messageSuccesCandidature.textContent = "";
+}, 5000);
+
+        // 6. Actualiser le compteur affiché
+        projet.candidatures = (projet.candidatures || 0) + 1;
+
+        const compteur = carteProjet.querySelector(
+            ".compteur-candidatures"
+        );
+
+        if (compteur) {
+            compteur.textContent =
+                "Candidatures : " + projet.candidatures;
+        }
+
+        console.log("Candidature SQLite :", resultat);
+
+    } catch (erreur) {
+        console.error("Erreur candidature :", erreur);
+
+        messageSuccesCandidature.textContent =
+            "Impossible de contacter le serveur.";
+
+    } finally {
+        envoyerCandidature.disabled = false;
+    }
+});
 }
 
 // ==================================================
@@ -398,9 +427,9 @@ function ajouterCandidature(carteProjet, projet) {
             placeholder="Présentez votre candidature..."
         ></textarea>
 
-        <button class="envoyer-candidature">
-            Envoyer ma candidature
-        </button>
+       <button type="button" class="envoyer-candidature">
+    Envoyer ma candidature
+</button>
 
         <p class="message-succes-candidature"></p>
     `;
@@ -460,10 +489,12 @@ function ajouterSuppression(
                 return;
             }
             try {
-            const reponse = await fetch(
-    `http://localhost:3000/projets/${projet.id}`,
+            
+const reponse = await fetch(
+    `http://127.0.0.1:3000/projets/${projet.id}`,
     {
-        method: "DELETE"
+        method: "DELETE",
+        credentials: "include"
     }
 );
 if (!reponse.ok) {
@@ -662,106 +693,216 @@ ajouterCandidature(
 
 const boutonPostuler =
     nouvelleCarte.querySelector(".postuler-projet");
-boutonVoirCandidatures.addEventListener(
-    "click",
-    function() {
-        listeCandidatures.innerHTML = "";
-        if (!projet.listeCandidatures?.length) {
-    listeCandidatures.textContent =
-        "Aucune candidature pour ce projet.";
-}
-        (projet.listeCandidatures || []).forEach(
+
+    
+boutonVoirCandidatures.addEventListener("click", async function () {
+    if (!listeCandidatures.hidden) {
+        listeCandidatures.hidden = true;
+        return;
+    }
+
+    listeCandidatures.hidden = false;
+    listeCandidatures.textContent = "Chargement des candidatures...";
+
+    try {
+        const reponse = await fetch(
+            `http://127.0.0.1:3000/projets/${projet.id}/candidatures`,
+            {
+                method: "GET",
+                credentials: "include"
+            }
+        );
+
+        if (!reponse.ok) {
+            throw new Error("Erreur HTTP : " + reponse.status);
+        }
+
+        const candidatures = await reponse.json();
+
+        listeCandidatures.replaceChildren();
+
+        if (candidatures.length === 0) {
+            listeCandidatures.textContent =
+                "Aucune candidature pour ce projet.";
+            return;
+        }
+
+        candidatures.forEach(function (candidature) {
+            const bloc = document.createElement("div");
+            bloc.classList.add("carte-candidature");
+
+            const nom = document.createElement("h4");
+            nom.textContent =
+                candidature.freelance_nom || "Freelance";
+
+            const message = document.createElement("p");
+            message.textContent =
+                "Message : " + candidature.message;
+
             
-            function(candidature) {
-const message = document.createElement("p");
-message.textContent =
-    typeof candidature === "string"
-        ? candidature
-        : candidature.message + " — " + candidature.statut;
-const boutonAccepter =
-    document.createElement("button");
-
-boutonAccepter.textContent = "Accepter";
 
 
-boutonAccepter.classList.add(
-    "accepter-candidature"
-);
-const boutonRefuser =
-    document.createElement("button");
+const texte = document.createElement("p");
+texte.textContent = "Message : " + candidature.message;
 
-boutonRefuser.textContent = "Refuser";
+const statut = document.createElement("p");
+statut.textContent = "Statut : " + candidature.statut;
 
-boutonRefuser.classList.add(
-    "refuser-candidature"
-);
-if (
-    typeof candidature !== "string" &&
-    (
-        candidature.statut === "Acceptée" ||
-        candidature.statut === "Refusée"
-    )
-) {
-    boutonAccepter.disabled = true;
-    boutonRefuser.disabled = true;
+
+
+statut.classList.add("statut-candidature");
+
+if (candidature.statut === "Acceptée") {
+    statut.classList.add("statut-acceptee");
+} else if (candidature.statut === "Refusée") {
+    statut.classList.add("statut-refusee");
+} else if (candidature.statut === "En attente") {
+    statut.classList.add("statut-attente");
 }
-listeCandidatures.appendChild(message);
-listeCandidatures.appendChild(boutonAccepter);
-listeCandidatures.appendChild(boutonRefuser);
-boutonAccepter.addEventListener(
-    "click",
-    function() {
-        if (typeof candidature !== "string") {
-    candidature.statut = "Acceptée";
-    projet.statut = "En cours";
-    nouveauStatut.textContent = "Statut : En cours";
-    boutonPostuler.textContent = "Postuler";
-    nouvelleCarte.querySelector(".form-candidature").hidden = true;
-    localStorage.setItem(
-    "projets",
-    JSON.stringify(projetsSauvegardes)   
-);
+
+statut.classList.add("statut-candidature");
+
+if (candidature.statut === "Acceptée") {
+    statut.classList.add("statut-acceptee");
+} else if (candidature.statut === "Refusée") {
+    statut.classList.add("statut-refusee");
+} else if (candidature.statut === "En attente") {
+    statut.classList.add("statut-attente");
 }
-boutonAccepter.disabled = true;
+
+const date = document.createElement("p");
+date.textContent = "Date : " + candidature.date_candidature;
+
+bloc.appendChild(nom);
+bloc.appendChild(message);
+bloc.appendChild(statut);
+bloc.appendChild(date);
+
+
+            // ================================
+// BOUTON ACCEPTER UNE CANDIDATURE
+// ================================
+
+if (candidature.statut === "En attente") {
+
+    const boutonAccepter = document.createElement("button");
+
+    boutonAccepter.textContent = "Accepter";
+    boutonAccepter.classList.add("btn-accepter");
+
+    boutonAccepter.addEventListener("click", async function () {
+
+        const confirmation = confirm(
+            "Voulez-vous accepter cette candidature ?"
+        );
+
+        if (!confirmation) {
+            return;
+        }
+
+        boutonAccepter.disabled = true;
+
+        try {
+            const reponse = await fetch(
+                `http://127.0.0.1:3000/candidatures/${candidature.id}/accepter`,
+                {
+                    method: "PATCH",
+                    credentials: "include"
+                }
+            );
+
+            const resultat = await reponse.json();
+
+            if (!reponse.ok) {
+                throw new Error(
+                    resultat.erreur || "Impossible d'accepter la candidature."
+                );
+            }
+
+            candidature.statut = resultat.statut;
+            statut.textContent = "Statut : " + resultat.statut;
+
+            boutonAccepter.remove();
+
+            alert("Candidature acceptée avec succès !");
+
+        } catch (erreur) {
+            console.error("Erreur acceptation :", erreur);
+            alert(erreur.message);
+            boutonAccepter.disabled = false;
+        }
+    });
+
+    bloc.appendChild(boutonAccepter);
+}
+
+if (candidature.statut === "En attente") {
+
+    const boutonRefuser = document.createElement("button");
+
+    boutonRefuser.textContent = "Refuser";
+    boutonRefuser.classList.add("btn-refuser");
+
+    boutonRefuser.addEventListener("click", async function () {
+
+        const confirmation = confirm(
+            "Voulez-vous vraiment refuser cette candidature ?"
+        );
+
+        if (!confirmation) {
+            return;
+        }
+
         boutonRefuser.disabled = true;
 
-        message.textContent =
-    (typeof candidature === "string"
-        ? candidature
-        : candidature.message)
-    + " — Acceptée";
-            
-    }
-    
-);
-boutonRefuser.addEventListener(
-    "click",
-    function() {
-        if (typeof candidature !== "string") {
-    candidature.statut = "Refusée";
-    localStorage.setItem(
-    "projets",
-    JSON.stringify(projetsSauvegardes)
-);
-}
-boutonAccepter.disabled = true;
-boutonRefuser.disabled = true;
-        message.textContent =
-    (typeof candidature === "string"
-        ? candidature
-        : candidature.message)
-    + " — Refusée";
-    }
-);
+        try {
+            const reponse = await fetch(
+                `http://127.0.0.1:3000/candidatures/${candidature.id}/refuser`,
+                {
+                    method: "PATCH",
+                    credentials: "include"
+                }
+            );
+
+            const resultat = await reponse.json();
+
+            if (!reponse.ok) {
+                throw new Error(
+                    resultat.erreur || "Impossible de refuser la candidature."
+                );
             }
-            
-        );
-        
-        listeCandidatures.hidden =
-            !listeCandidatures.hidden;
-            
+
+            candidature.statut = resultat.statut;
+            statut.textContent = "Statut : " + resultat.statut;
+
+            // Retirer les deux boutons après le refus
+            bloc.querySelector(".btn-accepter")?.remove();
+            boutonRefuser.remove();
+
+            alert("Candidature refusée avec succès !");
+
+        } catch (erreur) {
+            console.error("Erreur refus :", erreur);
+            alert(erreur.message);
+            boutonRefuser.disabled = false;
+        }
+    });
+
+    bloc.appendChild(boutonRefuser);
+}
+
+
+            listeCandidatures.appendChild(bloc);
+        });
+
+    } catch (erreur) {
+        console.error("Erreur candidatures :", erreur);
+
+        listeCandidatures.textContent =
+            "Impossible de charger les candidatures. Vérifiez votre connexion et vos autorisations.";
     }
-);
+});
+
     nouvelleCarte.appendChild(
     boutonStatut
 );
@@ -770,15 +911,9 @@ boutonStatut.addEventListener("click", async function() {
     let prochainStatut;
 if (nouveauStatut.textContent === "Statut : Ouvert") {
     prochainStatut = "En cours";
+} 
 
-
-
-
-
-
-
-        
-} else if (nouveauStatut.textContent === "Statut : En cours") {
+else if (nouveauStatut.textContent === "Statut : En cours") {
     prochainStatut = "Terminé";
 
 
@@ -788,7 +923,7 @@ if (nouveauStatut.textContent === "Statut : Ouvert") {
     
 console.log("Statut à envoyer à SQLite :", prochainStatut);
     try {
-const response = await fetch(`http://localhost:3000/projets/${projet.id}`, {
+const response = await fetch(`http://127.0.0.1:3000/projets/${projet.id}`, {
     method: "PATCH",
     headers: {
         "Content-Type": "application/json"
@@ -1029,6 +1164,7 @@ formProjet.addEventListener(
     async function(event) {
 
         event.preventDefault();
+        console.log("TEST KTT : formulaire déclenché !");
 
 
         const titre =
@@ -1139,22 +1275,36 @@ const projetAPI = {
 };
 try {
 
-    await fetch("http://localhost:3000/projets", {
+   await fetch("http://127.0.0.1:3000/projets", {
     method: "POST",
+
+    // Envoyer le cookie de session au serveur
+    credentials: "include",
+
     headers: {
         "Content-Type": "application/json"
     },
+
     body: JSON.stringify(projetAPI)
 })
 
-.then(function(response) {
+
+.then(async function(response) {
+
+    const data = await response.json();
 
     if (!response.ok) {
-        throw new Error("Erreur lors de la publication du projet");
+        console.error("Code HTTP :", response.status);
+        console.error("Réponse API :", data);
+
+        throw new Error(
+            data.erreur || "Erreur lors de la publication du projet"
+        );
     }
 
-    return response.json();
+    return data;
 })
+
 .then(function(data) {
     console.log("Réponse du serveur :", data);
     console.log("ID SQLite du projet :", data.id);
@@ -1341,7 +1491,7 @@ filtrerProjets();
 // CHARGEMENT DES PROJETS
 // =========================
 
-fetch("http://localhost:3000/projets")
+fetch("http://127.0.0.1:3000/projets")
     .then((response) => {
         if (!response.ok) {
             throw new Error("Impossible de charger les projets.");
@@ -1351,7 +1501,7 @@ fetch("http://localhost:3000/projets")
     })
     .then((projets) => {
         projets.forEach((projet) => {
-            projet.candidatures = 0;
+            projet.candidatures = Number(projet.candidatures) || 0;
             projet.budget = projet.budget ?? "Non renseigné";
 
             creerCarteProjet(projet);
@@ -1385,7 +1535,7 @@ const donneesInscription = {
     mot_de_passe: motDePasseUtilisateur,
     role: roleUtilisateur
 };
-fetch("http://localhost:3000/inscription", {
+fetch("http://127.0.0.1:3000/inscription", {
     method: "POST",
     headers: {
         "Content-Type": "application/json"
@@ -1433,8 +1583,9 @@ formConnexion.addEventListener("submit", function(event) {
     email: emailConnexion,
     mot_de_passe: motDePasseConnexion
 };
-fetch("http://localhost:3000/connexion", {
+fetch("http://127.0.0.1:3000/connexion", {
     method: "POST",
+    credentials: "include",
     headers: {
         "Content-Type": "application/json"
     },
@@ -1445,7 +1596,46 @@ fetch("http://localhost:3000/connexion", {
     const messageConnexion = document.getElementById("messageConnexion");
 
     messageConnexion.textContent = data.message || data.erreur;
-      messageConnexion.style.color = data.erreur ? "red" : "green";
+    messageConnexion.style.color = data.erreur ? "red" : "green";
+
+   // Si la connexion est réussie
+if (data.utilisateur && !data.erreur) {
+
+    // Afficher le bouton de déconnexion
+    btnDeconnexion.hidden = false;
+
+    // Récupérer les éléments HTML
+    const espaceUtilisateur = document.getElementById("espaceUtilisateur");
+    const bienvenueUtilisateur = document.getElementById("bienvenueUtilisateur");
+    const roleUtilisateur = document.getElementById("roleUtilisateur");
+
+    // Afficher le nom de l'utilisateur
+    bienvenueUtilisateur.textContent = "Bonjour " + data.utilisateur.nom + " 👋";
+
+    
+    // Personnaliser l'espace selon le rôle
+    if (data.utilisateur.role === "freelance") {
+
+        roleUtilisateur.textContent =
+            "Espace Freelance : bienvenue sur KërTech Talent !";
+
+        // Charger les candidatures du freelance
+        chargerMesCandidatures();
+
+    } else if (data.utilisateur.role === "client") {
+
+        roleUtilisateur.textContent =
+            "Espace Client : gérez vos projets sur KërTech Talent !";
+
+        // Masquer le tableau de bord freelance
+        document.getElementById("mesCandidatures").hidden = true;
+
+    }
+
+
+    // Rendre l'espace personnel visible
+    espaceUtilisateur.hidden = false;
+}
 })
 .catch(error => {
     console.error("Erreur réseau :", error);
@@ -1456,4 +1646,190 @@ fetch("http://localhost:3000/connexion", {
 });
 
     console.log("Formulaire de connexion détecté !");
+});
+
+
+
+/* ==========================================
+   TABLEAU DE BORD - MES CANDIDATURES
+========================================== */
+
+async function chargerMesCandidatures() {
+
+    const section = document.getElementById("mesCandidatures");
+    const liste = document.getElementById("listeMesCandidatures");
+    const message = document.getElementById("messageMesCandidatures");
+
+    // Afficher la section freelance
+    section.hidden = false;
+
+    // Réinitialiser l'affichage
+    liste.replaceChildren();
+    message.textContent = "Chargement des candidatures...";
+
+    try {
+
+        const reponse = await fetch(
+            "http://127.0.0.1:3000/mes-candidatures",
+            {
+                method: "GET",
+                credentials: "include"
+            }
+        );
+
+        const candidatures = await reponse.json();
+
+        if (!reponse.ok) {
+            throw new Error(
+                candidatures.erreur || "Impossible de charger les candidatures."
+            );
+        }
+
+        message.textContent = "";
+
+        if (candidatures.length === 0) {
+            message.textContent = "Vous n'avez pas encore de candidature.";
+            return;
+        }
+
+        candidatures.forEach(function(candidature) {
+
+            const carte = document.createElement("article");
+            carte.classList.add("carte-candidature");
+
+            const titre = document.createElement("h3");
+            titre.textContent = candidature.projet_titre;
+
+            const texte = document.createElement("p");
+            texte.textContent = "Message : " + candidature.message;
+
+            const statut = document.createElement("p");
+            statut.textContent = "Statut : " + candidature.statut;
+            
+statut.classList.add("statut-candidature");
+
+if (candidature.statut === "Acceptée") {
+    statut.classList.add("statut-acceptee");
+} else if (candidature.statut === "Refusée") {
+    statut.classList.add("statut-refusee");
+} else if (candidature.statut === "En attente") {
+    statut.classList.add("statut-attente");
+}
+
+
+            const date = document.createElement("p");
+            date.textContent = "Date : " + candidature.date_candidature;
+
+            carte.appendChild(titre);
+            carte.appendChild(texte);
+            carte.appendChild(statut);
+            carte.appendChild(date);
+
+            liste.appendChild(carte);
+
+        });
+
+    } catch (erreur) {
+
+        console.error("Erreur mes candidatures :", erreur);
+        message.textContent = erreur.message;
+
+    }
+}
+
+// Sélection du bouton de déconnexion
+const btnDeconnexion = document.querySelector("#btnDeconnexion");
+// Vérifier la session au chargement de la page
+fetch("http://127.0.0.1:3000/session", {
+    method: "GET",
+    credentials: "include"
+})
+
+.then(response => response.json())
+.then(data => {
+
+    // Vérifier si l'utilisateur est connecté
+    if (data.connecte === true && data.utilisateur) {
+
+        // Récupérer les éléments HTML
+        const espaceUtilisateur = document.getElementById("espaceUtilisateur");
+        const bienvenueUtilisateur = document.getElementById("bienvenueUtilisateur");
+        const roleUtilisateur = document.getElementById("roleUtilisateur");
+
+        // Afficher le bouton de déconnexion
+        btnDeconnexion.hidden = false;
+
+        // Afficher le nom de l'utilisateur
+        bienvenueUtilisateur.textContent =
+            "Bonjour " + data.utilisateur.nom + " 👋";
+
+        // Personnaliser l'espace selon le rôle
+        
+
+        // Personnaliser l'espace selon le rôle
+        if (data.utilisateur.role === "freelance") {
+
+            roleUtilisateur.textContent =
+                "Espace Freelance : bienvenue sur KërTech Talent !";
+
+            // Afficher les candidatures après actualisation
+            chargerMesCandidatures();
+
+        } else if (data.utilisateur.role === "client") {
+
+            roleUtilisateur.textContent =
+                "Espace Client : gérez vos projets sur KërTech Talent !";
+
+            // Masquer l'espace freelance
+            document.getElementById("mesCandidatures").hidden = true;
+
+        } else {
+
+            roleUtilisateur.textContent =
+                "Votre rôle : " + data.utilisateur.role;
+
+            document.getElementById("mesCandidatures").hidden = true;
+
+        }
+
+
+        // Afficher l'espace personnel
+        espaceUtilisateur.hidden = false;
+    }
+
+})
+.catch(error => {
+    console.error("Erreur de vérification de session :", error);
+});
+
+// Déconnexion au clic
+btnDeconnexion.addEventListener("click", async function () {
+
+    try {
+        const reponse = await fetch("http://127.0.0.1:3000/deconnexion", {
+            method: "POST",
+            credentials: "include"
+        });
+
+        const resultat = await reponse.json();
+
+        if (!reponse.ok) {
+            throw new Error(resultat.erreur || "Erreur de déconnexion.");
+        }
+
+        // Masquer le bouton de déconnexion
+btnDeconnexion.hidden = true;
+
+// Masquer l'espace personnel
+document.querySelector("#espaceUtilisateur").hidden = true;
+
+// Afficher le message de déconnexion
+document.querySelector("#messageConnexion").textContent = resultat.message;
+    } catch (erreur) {
+        console.error("Erreur :", erreur);
+
+        document.querySelector("#messageConnexion").textContent =
+            "Impossible de se déconnecter.";
+    }
+
 });
