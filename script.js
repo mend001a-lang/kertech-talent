@@ -908,8 +908,9 @@ if (candidature.statut === "En attente") {
 );
 
 boutonStatut.addEventListener("click", async function() {
+
     let prochainStatut;
-if (nouveauStatut.textContent === "Statut : Ouvert") {
+if (nouveauStatut.textContent.trim().toLowerCase() === "statut : ouvert") {
     prochainStatut = "En cours";
 } 
 
@@ -923,8 +924,10 @@ else if (nouveauStatut.textContent === "Statut : En cours") {
     
 console.log("Statut à envoyer à SQLite :", prochainStatut);
     try {
+
 const response = await fetch(`http://127.0.0.1:3000/projets/${projet.id}`, {
     method: "PATCH",
+    credentials: "include",
     headers: {
         "Content-Type": "application/json"
     },
@@ -932,6 +935,7 @@ const response = await fetch(`http://127.0.0.1:3000/projets/${projet.id}`, {
         statut: prochainStatut
     })
 });
+
 if (!response.ok) {
     throw new Error("Impossible de modifier le statut du projet");
 }

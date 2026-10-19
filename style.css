@@ -236,3 +236,91 @@ footer nav a {
     background-color: #FEF3C7;
     color: #92400E;
 }
+
+
+/* ==============================
+   KËRTECH TALENT
+   Cartes des candidatures freelance
+   ============================== */
+
+.carte-candidature {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.carte-candidature h3 {
+    color: #1F2937;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+
+/* ==============================
+   KËRTECH TALENT
+   Liste des candidatures côté client
+   ============================== */
+
+.liste-candidatures {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+}
+
+
+/* ==============================
+   BOUTON VOIR LES CANDIDATURES
+   ============================== */
+
+.voir-candidatures {
+    background-color: #1F2937;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.voir-candidatures:hover {
+    background-color: #374151;
+}
+
+.voir-candidatures:focus-visible {
+    outline: 3px solid #00DF89;
+    outline-offset: 3px;
+}
+
+
+/* ==============================
+   BOUTON CHANGER LE STATUT
+   ============================== */
+
+.changer-statut {
+    background-color: #00DF89;
+    color: #1F2937;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.changer-statut:hover {
+    background-color: #00C979;
+}
+
+.changer-statut:focus-visible {
+    outline: 3px solid #1F2937;
+    outline-offset: 3px;
+}
