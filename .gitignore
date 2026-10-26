@@ -1,9 +1,28 @@
+# Dépendances Node.js
 node_modules/
+
+# Variables d'environnement et secrets
 .env
+.env.*
+!.env.example
+
+# Base de données SQLite
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
+
+# Sessions
 kertech.sid
+
+# Sauvegardes et audits locaux
 sauvegardes/
+archives-audit15/
+audit15-log.txt
+server-avant-audit15.js
+server-sauvegarde.js
+verifier-table.js
 audit-ktt.json
+
+# Journaux
+*.log

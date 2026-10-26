@@ -8,7 +8,33 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 
 const app = express();
-const db = new sqlite3.Database("./kertech.db");
+
+const db = new sqlite3.Database("./kertech.db", (err) => {
+    if (err) {
+        console.error("Erreur de connexion SQLite :", err.message);
+    } else {
+        console.log("Connexion SQLite réussie !");
+    }
+});
+
+db.run("PRAGMA foreign_keys = ON", (err) => {
+    if (err) {
+        console.error("Erreur activation clés étrangères :", err.message);
+        return;
+    }
+
+    db.get("PRAGMA foreign_keys;", (erreur, resultat) => {
+        if (erreur) {
+            console.error("Erreur vérification SQLite :", erreur.message);
+        } else {
+            console.log(
+                "Clés étrangères réellement activées :",
+                resultat.foreign_keys
+            );
+        }
+    });
+});
+
 const PORT = 3000;
 
 // =====================================
@@ -34,6 +60,36 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
+
+
+/* =====================================
+   DECONNEXION UTILISATEUR
+===================================== */
+
+app.post("/deconnexion", (req, res) => {
+
+    req.session.destroy((err) => {
+
+        if (err) {
+            console.error("Erreur de déconnexion :", err);
+
+            return res.status(500).json({
+                erreur: "Impossible de se déconnecter."
+            });
+        }
+
+        res.clearCookie("kertech.sid", {
+            path: "/"
+        });
+
+        return res.status(200).json({
+            message: "Déconnexion réussie !"
+        });
+
+    });
+
+});
+
 
 // =====================================
 // TABLE DES CANDIDATURES
@@ -974,9 +1030,15 @@ app.patch("/projets/:id", (req, res) => {
 });
 
 
+
+
+
+
 // =====================================
 // SUPPRIMER UN PROJET (CLIENT)
 // =====================================
+
+
 
 app.delete("/projets/:id", (req, res) => {
 
@@ -987,7 +1049,7 @@ app.delete("/projets/:id", (req, res) => {
         });
     }
 
-    // 2. Vérifier l'identifiant
+    // 2. Vérifier l'identifiant du projet
     const projetId = Number(req.params.id);
 
     if (!Number.isSafeInteger(projetId) || projetId <= 0) {
@@ -996,7 +1058,362 @@ app.delete("/projets/:id", (req, res) => {
         });
     }
 
-    // 3. Vérifier le rôle client
+    const clientId = req.session.userId;
+
+    // 3. Ouvrir une connexion SQLite dédiée
+    const transactionDb = new sqlite3.Database(
+        "./kertech.db",
+        (err) => {
+
+            if (err) {
+                console.error("Connexion SQLite :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Impossible d'ouvrir la base de données."
+                });
+            }
+
+            let terminee = false;
+            let transactionActive = false;
+
+            // Fermer la connexion et répondre une seule fois
+            function terminer(statut, resultat) {
+
+                if (terminee) return;
+                terminee = true;
+
+                transactionDb.close((closeErr) => {
+
+                    if (closeErr) {
+                        console.error(
+                            "Fermeture SQLite :",
+                            closeErr.message
+                        );
+                    }
+
+                    return res.status(statut).json(resultat);
+                });
+            }
+
+            // Annuler uniquement une transaction active
+            function annuler(statut, message) {
+
+                console.log("AUDIT - Annulation :", {
+                    statut,
+                    message,
+                    transactionActive
+                });
+
+                if (!transactionActive) {
+                    return terminer(statut, {
+                        erreur: message
+                    });
+                }
+
+                transactionDb.run("ROLLBACK", (rollbackErr) => {
+
+                    if (rollbackErr) {
+                        console.error(
+                            "ROLLBACK :",
+                            rollbackErr.message
+                        );
+
+                        return terminer(500, {
+                            erreur: "Erreur lors de l'annulation de la transaction."
+                        });
+                    }
+
+                    transactionActive = false;
+
+                    return terminer(statut, {
+                        erreur: message
+                    });
+                });
+            }
+
+            // 4. Activer les clés étrangères
+            transactionDb.run(
+                "PRAGMA foreign_keys = ON",
+                (err) => {
+
+                    if (err) {
+                        console.error(
+                            "Clés étrangères :",
+                            err.message
+                        );
+
+                        return terminer(500, {
+                            erreur: "Erreur de configuration SQLite."
+                        });
+                    }
+
+                    // 5. Démarrer la transaction
+                    transactionDb.run(
+                        "BEGIN IMMEDIATE TRANSACTION",
+                        (err) => {
+
+                            if (err) {
+                                console.error(
+                                    "BEGIN :",
+                                    err.message
+                                );
+
+                                return terminer(500, {
+                                    erreur: "Impossible de démarrer la transaction."
+                                });
+                            }
+
+                            transactionActive = true;
+
+                            console.log(
+                                "AUDIT - Transaction démarrée"
+                            );
+
+                            // 6. Vérifier le rôle
+                            transactionDb.get(
+                                "SELECT role FROM utilisateurs WHERE id = ?",
+                                [clientId],
+                                (err, utilisateur) => {
+
+                                    if (err) {
+                                        console.error(
+                                            "Utilisateur :",
+                                            err.message
+                                        );
+
+                                        return annuler(
+                                            500,
+                                            "Erreur de vérification du compte."
+                                        );
+                                    }
+
+                                    if (!utilisateur || utilisateur.role !== "client") {
+                                        return annuler(
+                                            403,
+                                            "Accès réservé aux clients."
+                                        );
+                                    }
+
+                                    // 7. Vérifier le propriétaire
+                                    transactionDb.get(
+                                        `SELECT id FROM projets
+                                         WHERE id = ? AND client_id = ?`,
+                                        [projetId, clientId],
+                                        (err, projet) => {
+
+                                            if (err) {
+                                                console.error(
+                                                    "Projet :",
+                                                    err.message
+                                                );
+
+                                                return annuler(
+                                                    500,
+                                                    "Erreur de vérification du projet."
+                                                );
+                                            }
+
+                                            console.log(
+                                                "AUDIT - Propriétaire :",
+                                                { projetId, clientId, projet }
+                                            );
+
+                                            if (!projet) {
+                                                return annuler(
+                                                    404,
+                                                    "Projet introuvable ou accès non autorisé."
+                                                );
+                                            }
+
+                                            // 8. Supprimer les candidatures
+                                            transactionDb.run(
+                                                "DELETE FROM candidatures WHERE projet_id = ?",
+                                                [projetId],
+                                                (err) => {
+
+                                                    if (err) {
+                                                        console.error(
+                                                            "Candidatures :",
+                                                            err.message
+                                                        );
+
+                                                        return annuler(
+                                                            500,
+                                                            "Impossible de supprimer les candidatures."
+                                                        );
+                                                    }
+
+        // AUDIT 15 - Simulation contrôlée d'une erreur
+        
+                                                    // 9. Supprimer le projet
+                                                    transactionDb.run(
+                                                        `DELETE FROM projets
+                                                         WHERE id = ? AND client_id = ?`,
+                                                        [projetId, clientId],
+                                                        function (err) {
+
+                                                            if (err) {
+                                                                console.error(
+                                                                    "Suppression :",
+                                                                    err.message
+                                                                );
+
+                                                                return annuler(
+                                                                    500,
+                                                                    "Impossible de supprimer le projet."
+                                                                );
+                                                            }
+
+                                                            console.log(
+                                                                "AUDIT - Lignes supprimées :",
+                                                                this.changes
+                                                            );
+
+                                                            if (this.changes === 0) {
+                                                                return annuler(
+                                                                    404,
+                                                                    "Projet introuvable ou accès non autorisé."
+                                                                );
+                                                            }
+
+                                                            // 10. Valider la transaction
+                                                            transactionDb.run(
+                                                                "COMMIT",
+                                                                (err) => {
+
+                                                                    if (err) {
+                                                                        console.error(
+                                                                            "COMMIT :",
+                                                                            err.message
+                                                                        );
+
+                                                                        return annuler(
+                                                                            500,
+                                                                            "Impossible de finaliser la suppression."
+                                                                        );
+                                                                    }
+
+                                                                    transactionActive = false;
+
+                                                                    console.log(
+                                                                        "AUDIT - COMMIT réussi"
+                                                                    );
+
+                                                                    return terminer(200, {
+                                                                        message: "Projet supprimé avec succès !"
+                                                                    });
+                                                                }
+                                                            );
+                                                        }
+                                                    );
+                                                }
+                                            );
+                                        }
+                                    );
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+
+
+// =====================================
+// SUPPRIMER UN PROJET (CLIENT)
+// =====================================
+
+
+
+
+
+
+                                /* =====================================
+                                   CANDIDATURES REÇUES PAR LE CLIENT
+                                ===================================== */
+
+                               app.get("/client/candidatures", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier le rôle client
+    db.get(
+        "SELECT role FROM utilisateurs WHERE id = ?",
+        [req.session.userId],
+        (err, utilisateur) => {
+            if (err) {
+                console.error("Erreur utilisateur :", err.message);
+
+                return res.status(500).json({
+                    erreur: "Erreur de vérification du compte."
+                });
+            }
+
+            if (!utilisateur || utilisateur.role !== "client") {
+                return res.status(403).json({
+                    erreur: "Accès réservé aux clients."
+                });
+            }
+
+            // 3. Récupérer les candidatures reçues
+            const sql = `
+                SELECT
+                    c.*,
+                    p.titre AS projet_titre
+                FROM candidatures AS c
+                INNER JOIN projets AS p
+                    ON c.projet_id = p.id
+                WHERE p.client_id = ?
+                ORDER BY c.id DESC
+            `;
+
+            db.all(
+                sql,
+                [req.session.userId],
+                (err, candidatures) => {
+
+                    if (err) {
+                        console.error(
+                            "Erreur candidatures client :",
+                            err.message
+                        );
+
+                        return res.status(500).json({
+                            erreur: "Impossible de récupérer les candidatures."
+                        });
+                    }
+
+                    return res.status(200).json(candidatures);
+                }
+            );
+        }
+    );
+});
+
+
+
+/* =====================================
+   STATISTIQUES DU TABLEAU DE BORD CLIENT
+===================================== */
+
+app.get("/client/statistiques", (req, res) => {
+
+    // 1. Vérifier la connexion
+    if (!req.session.userId) {
+        return res.status(401).json({
+            erreur: "Vous devez être connecté."
+        });
+    }
+
+    // 2. Vérifier que l'utilisateur est un client
     db.get(
         "SELECT role FROM utilisateurs WHERE id = ?",
         [req.session.userId],
@@ -1016,103 +1433,56 @@ app.delete("/projets/:id", (req, res) => {
                 });
             }
 
-            // 4. Vérifier que le projet appartient au client
+            // 3. Calculer les statistiques du client connecté
+            const clientId = req.session.userId;
+
+            const sql = `
+                SELECT
+                    (
+                        SELECT COUNT(*)
+                        FROM projets
+                        WHERE client_id = ?
+                    ) AS totalProjets,
+
+                    (
+                        SELECT COUNT(*)
+                        FROM candidatures
+                        WHERE projet_id IN (
+                            SELECT id
+                            FROM projets
+                            WHERE client_id = ?
+                        )
+                    ) AS totalCandidatures,
+
+                    (
+                        SELECT COUNT(*)
+                        FROM projets
+                        WHERE client_id = ?
+                        AND LOWER(TRIM(statut)) = 'terminé'
+                    ) AS projetsTermines
+            `;
+
             db.get(
-                `SELECT id FROM projets
-                 WHERE id = ? AND client_id = ?`,
-                [projetId, req.session.userId],
-                (err, projet) => {
+                sql,
+                [clientId, clientId, clientId],
+                (err, statistiques) => {
 
                     if (err) {
-                        console.error("Erreur projet :", err.message);
+                        console.error(
+                            "Erreur statistiques client :",
+                            err.message
+                        );
 
                         return res.status(500).json({
-                            erreur: "Erreur de vérification du projet."
+                            erreur: "Impossible de récupérer les statistiques."
                         });
                     }
 
-                    if (!projet) {
-                        return res.status(404).json({
-                            erreur: "Projet introuvable ou accès non autorisé."
-                        });
-                    }
-
-                    // 5. Supprimer les candidatures associées
-                    db.run(
-                        "DELETE FROM candidatures WHERE projet_id = ?",
-                        [projetId],
-                        function (err) {
-
-                            if (err) {
-                                console.error("Erreur candidatures :", err.message);
-
-                                return res.status(500).json({
-                                    erreur: "Impossible de supprimer les candidatures."
-                                });
-                            }
-
-                            // 6. Supprimer le projet du client
-                            db.run(
-                                `DELETE FROM projets
-                                 WHERE id = ? AND client_id = ?`,
-                                [projetId, req.session.userId],
-                                function (err) {
-
-                                    if (err) {
-                                        console.error("Erreur suppression :", err.message);
-
-                                        return res.status(500).json({
-                                            erreur: "Impossible de supprimer le projet."
-                                        });
-                                    }
-
-                                    if (this.changes === 0) {
-                                        return res.status(404).json({
-                                            erreur: "Projet introuvable ou accès non autorisé."
-                                        });
-                                    }
-
-                                    return res.status(200).json({
-                                        message: "Projet supprimé avec succès !"
-                                    });
-                                }
-                            );
-                        }
-                    );
+                    return res.status(200).json(statistiques);
                 }
             );
         }
     );
-});
-
-
-// =====================================
-// DÉCONNEXION
-// =====================================
-
-app.post("/deconnexion", (req, res) => {
-
-    req.session.destroy((err) => {
-
-        if (err) {
-            console.error("Erreur déconnexion :", err.message);
-
-            return res.status(500).json({
-                erreur: "Impossible de se déconnecter."
-            });
-        }
-
-        res.clearCookie("kertech.sid", {
-            path: "/",
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax"
-        });
-
-        return res.status(200).json({
-            message: "Déconnexion réussie !"
-        });
-    });
 });
 
 

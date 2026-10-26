@@ -1,6 +1,4 @@
 
-
-
 // ==================================================
 // SÉLECTION DES ÉLÉMENTS
 // ==================================================
@@ -11,6 +9,8 @@ const nom = document.querySelector("#nom");
 const email = document.querySelector("#email");
 const message = document.querySelector("#message");
 const messageErreur = document.querySelector("#messageErreur");
+let utilisateurConnecte = null;
+
 
 // Formulaire de projet
 const publierProjet = document.querySelector("#publierProjet");
@@ -403,6 +403,12 @@ function ajouterCandidature(carteProjet, projet) {
     boutonPostuler.classList.add(
         "postuler-projet"
     );
+// Masquer le bouton tant que les droits ne sont pas vérifiés
+boutonPostuler.hidden = true;
+
+// Identifier ce bouton pour notre actualisation
+boutonPostuler.dataset.actionRole = "freelance";
+
    if (
     projet.statut === "En cours" ||
     projet.statut === "Terminé"
@@ -474,6 +480,15 @@ function ajouterSuppression(
     boutonSupprimer.classList.add(
         "btn-supprimer"
     );
+    // Vérifier si l'utilisateur est propriétaire du projet
+const estProprietaire =
+    utilisateurConnecte?.role === "client" &&
+    Number(utilisateurConnecte.id) === Number(projet.client_id);
+
+// Masquer le bouton si l'utilisateur n'est pas propriétaire
+boutonSupprimer.hidden = !estProprietaire;
+// Conserver les identifiants nécessaires à l'actualisation
+boutonSupprimer.dataset.clientId = projet.client_id;
 
 
     boutonSupprimer.addEventListener(
@@ -540,11 +555,224 @@ if (!reponse.ok) {
 }
 
 
+
+/* =====================================
+   STATISTIQUES DU TABLEAU DE BORD CLIENT
+===================================== */
+
+async function chargerStatistiquesClient() {
+
+    console.log("Chargement des statistiques client lancé !");
+
+    try {
+        const reponse = await fetch(
+            "http://127.0.0.1:3000/client/statistiques",
+            {
+                credentials: "include"
+            }
+        );
+
+        if (!reponse.ok) {
+            throw new Error("Impossible de charger les statistiques.");
+        }
+
+        const statistiques = await reponse.json();
+
+        console.log("Statistiques reçues :", statistiques);
+
+        document.getElementById("totalProjetsClient").textContent =
+            statistiques.totalProjets;
+
+        document.getElementById("totalCandidaturesClient").textContent =
+            statistiques.totalCandidatures;
+
+        document.getElementById("totalProjetsTermines").textContent =
+            statistiques.projetsTermines;
+
+        console.log(
+            "Compteurs affichés :",
+            statistiques.totalProjets,
+            statistiques.totalCandidatures,
+            statistiques.projetsTermines
+        );
+
+    } catch (erreur) {
+        console.error("Erreur statistiques client :", erreur.message);
+    }
+}
+
+
+/* =====================================
+   AFFICHAGE DES CANDIDATURES REÇUES
+===================================== */
+
+async function chargerCandidaturesClient() {
+
+    const liste = document.getElementById("listeCandidaturesClient");
+    const message = document.getElementById("messageCandidaturesClient");
+
+    if (!liste || !message) {
+        console.error("Éléments HTML des candidatures introuvables.");
+        return;
+    }
+
+    liste.replaceChildren();
+    message.textContent = "Chargement des candidatures...";
+
+    try {
+        const reponse = await fetch(
+            "http://127.0.0.1:3000/client/candidatures",
+            {
+                credentials: "include"
+            }
+        );
+
+        if (!reponse.ok) {
+            throw new Error("Impossible de charger les candidatures.");
+        }
+
+        const candidatures = await reponse.json();
+
+        console.log("Candidatures reçues :", candidatures);
+
+        message.textContent = "";
+
+        if (candidatures.length === 0) {
+            message.textContent =
+                "Aucune candidature reçue pour le moment.";
+            return;
+        }
+
+        candidatures.forEach((candidature) => {
+
+            const carte = document.createElement("article");
+            carte.classList.add("carte-candidature");
+
+            const titre = document.createElement("h4");
+            titre.textContent = candidature.projet_titre;
+
+            const texte = document.createElement("p");
+            texte.textContent = candidature.message;
+
+            const statut = document.createElement("p");
+
+function afficherStatut() {
+
+    statut.textContent = "Statut : " + candidature.statut;
+
+    statut.classList.remove(
+        "statut-attente",
+        "statut-acceptee",
+        "statut-refusee"
+    );
+
+    if (candidature.statut === "En attente") {
+        statut.classList.add("statut-attente");
+
+    } else if (candidature.statut === "Acceptée") {
+        statut.classList.add("statut-acceptee");
+
+    } else if (candidature.statut === "Refusée") {
+        statut.classList.add("statut-refusee");
+    }
+}
+
+afficherStatut();
+
+           
+carte.appendChild(titre);
+carte.appendChild(texte);
+carte.appendChild(statut);
+
+// Boutons visibles uniquement pour les candidatures en attente
+if (candidature.statut === "En attente") {
+
+    const boutonAccepter = document.createElement("button");
+    boutonAccepter.textContent = "Accepter";
+    boutonAccepter.classList.add("btn-accepter");
+
+    const boutonRefuser = document.createElement("button");
+    boutonRefuser.textContent = "Refuser";
+    boutonRefuser.classList.add("btn-refuser");
+
+    async function traiterCandidature(action) {
+
+        const confirmation = confirm(
+            `Voulez-vous vraiment ${action} cette candidature ?`
+        );
+
+        if (!confirmation) return;
+
+        boutonAccepter.disabled = true;
+        boutonRefuser.disabled = true;
+
+        try {
+            const reponse = await fetch(
+                `http://127.0.0.1:3000/candidatures/${candidature.id}/${action}`,
+                {
+                    method: "PATCH",
+                    credentials: "include"
+                }
+            );
+
+            const resultat = await reponse.json();
+
+            if (!reponse.ok) {
+                throw new Error(
+                    resultat.erreur || "Impossible de traiter la candidature."
+                );
+            }
+
+            candidature.statut = resultat.statut;
+            statut.textContent = "Statut : " + resultat.statut;
+
+            boutonAccepter.remove();
+            boutonRefuser.remove();
+
+            alert("Statut de la candidature mis à jour !");
+
+        } catch (erreur) {
+            console.error("Erreur candidature :", erreur);
+            alert(erreur.message);
+
+            boutonAccepter.disabled = false;
+            boutonRefuser.disabled = false;
+        }
+    }
+
+    boutonAccepter.addEventListener("click", function () {
+        traiterCandidature("accepter");
+    });
+
+    boutonRefuser.addEventListener("click", function () {
+        traiterCandidature("refuser");
+    });
+
+    carte.appendChild(boutonAccepter);
+    carte.appendChild(boutonRefuser);
+}
+
+liste.appendChild(carte);
+
+        });
+
+    } catch (erreur) {
+        console.error("Erreur candidatures client :", erreur.message);
+
+        message.textContent =
+            "Erreur lors du chargement des candidatures.";
+    }
+}
+
+
 // ==================================================
 // CRÉATION D'UNE CARTE PROJET
 // ==================================================
 
 function creerCarteProjet(projet) {
+    console.log("Projet :", projet.id);
+console.log("Propriétaire :", projet.client_id);
+console.log("Utilisateur connecté :", utilisateurConnecte);
 
     const nouvelleCarte =
         document.createElement("article");
@@ -682,6 +910,12 @@ boutonStatut.classList.add(
 nouvelleCarte.appendChild(
     boutonVoirCandidatures
 );
+// Identifier le propriétaire du projet
+boutonVoirCandidatures.dataset.clientId = projet.client_id;
+
+// Masquer le bouton en attendant la vérification des droits
+boutonVoirCandidatures.hidden = true;
+
 nouvelleCarte.appendChild(
     listeCandidatures
 );
@@ -746,7 +980,26 @@ const texte = document.createElement("p");
 texte.textContent = "Message : " + candidature.message;
 
 const statut = document.createElement("p");
-statut.textContent = "Statut : " + candidature.statut;
+
+function afficherStatut() {
+    statut.textContent = "Statut : " + candidature.statut;
+
+    statut.classList.remove(
+        "statut-attente",
+        "statut-acceptee",
+        "statut-refusee"
+    );
+
+    if (candidature.statut === "En attente") {
+        statut.classList.add("statut-attente");
+    } else if (candidature.statut === "Acceptée") {
+        statut.classList.add("statut-acceptee");
+    } else if (candidature.statut === "Refusée") {
+        statut.classList.add("statut-refusee");
+    }
+}
+
+afficherStatut();
 
 
 
@@ -771,6 +1024,7 @@ if (candidature.statut === "Acceptée") {
 }
 
 const date = document.createElement("p");
+date.classList.add("date-candidature");
 date.textContent = "Date : " + candidature.date_candidature;
 
 bloc.appendChild(nom);
@@ -820,7 +1074,7 @@ if (candidature.statut === "En attente") {
             }
 
             candidature.statut = resultat.statut;
-            statut.textContent = "Statut : " + resultat.statut;
+afficherStatut();
 
             boutonAccepter.remove();
 
@@ -906,6 +1160,12 @@ if (candidature.statut === "En attente") {
     nouvelleCarte.appendChild(
     boutonStatut
 );
+
+// Identifier le propriétaire du projet
+boutonStatut.dataset.clientId = projet.client_id;
+
+// Masquer le bouton par défaut
+boutonStatut.hidden = true;
 
 boutonStatut.addEventListener("click", async function() {
 
@@ -1491,6 +1751,53 @@ filtreCategorie.addEventListener(
 
 filtrerFreelances();
 filtrerProjets();
+
+// =========================
+// GESTION DES BOUTONS PROJETS
+// =========================
+
+function actualiserBoutonsSuppression() {
+
+    // Boutons réservés au client propriétaire
+    const boutonsClient = document.querySelectorAll(
+        ".btn-supprimer[data-client-id], " +
+        ".changer-statut[data-client-id], " +
+        ".voir-candidatures[data-client-id]"
+    );
+
+    boutonsClient.forEach(function(bouton) {
+
+        const estProprietaire =
+            utilisateurConnecte?.role === "client" &&
+            Number(utilisateurConnecte.id) ===
+            Number(bouton.dataset.clientId);
+
+        bouton.hidden = !estProprietaire;
+
+    });
+
+    // Boutons réservés aux freelances
+    const boutonsPostuler = document.querySelectorAll(
+        ".postuler-projet[data-action-role='freelance']"
+    );
+
+    boutonsPostuler.forEach(function(bouton) {
+
+        const estFreelance =
+            utilisateurConnecte?.role === "freelance";
+
+        bouton.hidden = !estFreelance;
+
+    });
+
+}
+
+// =========================
+// CHARGEMENT DES PROJETS
+// =========================
+
+
+
 // =========================
 // CHARGEMENT DES PROJETS
 // =========================
@@ -1503,16 +1810,28 @@ fetch("http://127.0.0.1:3000/projets")
 
         return response.json();
     })
-    .then((projets) => {
-        projets.forEach((projet) => {
-            projet.candidatures = Number(projet.candidatures) || 0;
-            projet.budget = projet.budget ?? "Non renseigné";
+  
+.then((projets) => {
 
-            creerCarteProjet(projet);
-        });
+    projets.forEach((projet) => {
 
-        filtrerProjets();
-    })
+        projet.candidatures =
+            Number(projet.candidatures) || 0;
+
+        projet.budget =
+            projet.budget ?? "Non renseigné";
+
+        creerCarteProjet(projet);
+
+    });
+
+    // Actualiser les boutons après création des cartes
+    actualiserBoutonsSuppression();
+
+    filtrerProjets();
+
+})
+
     .catch((erreur) => {
         console.error("Erreur de chargement des projets :", erreur.message);
     });
@@ -1606,35 +1925,61 @@ fetch("http://127.0.0.1:3000/connexion", {
 if (data.utilisateur && !data.erreur) {
 
     // Afficher le bouton de déconnexion
-    btnDeconnexion.hidden = false;
+btnDeconnexion.hidden = false;
 
-    // Récupérer les éléments HTML
-    const espaceUtilisateur = document.getElementById("espaceUtilisateur");
-    const bienvenueUtilisateur = document.getElementById("bienvenueUtilisateur");
-    const roleUtilisateur = document.getElementById("roleUtilisateur");
+// Récupérer les éléments HTML
+const espaceUtilisateur = document.getElementById("espaceUtilisateur");
+const bienvenueUtilisateur = document.getElementById("bienvenueUtilisateur");
+const roleUtilisateur = document.getElementById("roleUtilisateur");
 
-    // Afficher le nom de l'utilisateur
-    bienvenueUtilisateur.textContent = "Bonjour " + data.utilisateur.nom + " 👋";
+// Afficher l'espace utilisateur
+espaceUtilisateur.hidden = false;
+
+// Afficher le nom de l'utilisateur
+bienvenueUtilisateur.textContent =
+    "Bonjour " + data.utilisateur.nom + " 👋";
 
     
-    // Personnaliser l'espace selon le rôle
-    if (data.utilisateur.role === "freelance") {
+ // Mémoriser l'utilisateur connecté
+ utilisateurConnecte = data.utilisateur;
 
-        roleUtilisateur.textContent =
-            "Espace Freelance : bienvenue sur KërTech Talent !";
+ // Actualiser les boutons selon le nouvel utilisateur
+ actualiserBoutonsSuppression();
 
-        // Charger les candidatures du freelance
-        chargerMesCandidatures();
+ // Vérification temporaire
+ console.log("Utilisateur connecté :", utilisateurConnecte);
 
-    } else if (data.utilisateur.role === "client") {
 
-        roleUtilisateur.textContent =
-            "Espace Client : gérez vos projets sur KërTech Talent !";
+// Personnaliser l'espace selon le rôle
+if (data.utilisateur.role === "freelance") {
 
-        // Masquer le tableau de bord freelance
-        document.getElementById("mesCandidatures").hidden = true;
+    roleUtilisateur.textContent =
+        "Espace Freelance : bienvenue sur KërTech Talent !";
 
-    }
+    // Afficher les candidatures
+    document.getElementById("mesCandidatures").hidden = false;
+
+    // Masquer le tableau de bord client
+    document.getElementById("dashboardClient").hidden = true;
+
+    // Charger les candidatures du freelance
+    chargerMesCandidatures();
+
+} else if (data.utilisateur.role === "client") {
+
+    roleUtilisateur.textContent =
+        "Espace Client : gérez vos projets sur KërTech Talent !";
+
+    // Masquer les candidatures freelance
+    document.getElementById("mesCandidatures").hidden = true;
+
+    // Afficher le tableau de bord client
+    document.getElementById("dashboardClient").hidden = false;
+
+    // Charger les statistiques du client
+    chargerStatistiquesClient();
+}
+
 
 
     // Rendre l'espace personnel visible
@@ -1708,21 +2053,48 @@ async function chargerMesCandidatures() {
             texte.textContent = "Message : " + candidature.message;
 
             const statut = document.createElement("p");
-            statut.textContent = "Statut : " + candidature.statut;
-            
-statut.classList.add("statut-candidature");
 
-if (candidature.statut === "Acceptée") {
+statut.textContent = "Statut : " + candidature.statut;
+
+if (candidature.statut === "En attente") {
+    statut.classList.add("statut-attente");
+
+} else if (candidature.statut === "Acceptée") {
     statut.classList.add("statut-acceptee");
+
 } else if (candidature.statut === "Refusée") {
     statut.classList.add("statut-refusee");
-} else if (candidature.statut === "En attente") {
-    statut.classList.add("statut-attente");
 }
+            
 
 
-            const date = document.createElement("p");
-            date.textContent = "Date : " + candidature.date_candidature;
+            // Création du paragraphe de date
+const date = document.createElement("p");
+
+// Récupération de la date SQLite
+const dateOriginale = candidature.date_candidature;
+
+// Séparation de la date et de l'heure
+const [jourComplet, heureComplete] = dateOriginale.split(" ");
+
+// Récupération de l'année, du mois et du jour
+const [annee, mois, jour] = jourComplet.split("-").map(Number);
+
+// Création de la date JavaScript
+const dateJS = new Date(annee, mois - 1, jour);
+
+// Formatage en français
+const dateFormatee = dateJS.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+});
+
+// Récupération de l'heure et des minutes
+const heure = heureComplete.slice(0, 5);
+
+// Affichage final
+date.textContent = `Date : ${dateFormatee} à ${heure}`;
 
             carte.appendChild(titre);
             carte.appendChild(texte);
@@ -1754,6 +2126,11 @@ fetch("http://127.0.0.1:3000/session", {
 
     // Vérifier si l'utilisateur est connecté
     if (data.connecte === true && data.utilisateur) {
+        // Mémoriser l'utilisateur après actualisation
+utilisateurConnecte = data.utilisateur;
+
+console.log("Session restaurée :", utilisateurConnecte);
+actualiserBoutonsSuppression();
 
         // Récupérer les éléments HTML
         const espaceUtilisateur = document.getElementById("espaceUtilisateur");
@@ -1779,15 +2156,31 @@ fetch("http://127.0.0.1:3000/session", {
             // Afficher les candidatures après actualisation
             chargerMesCandidatures();
 
-        } else if (data.utilisateur.role === "client") {
+        
 
-            roleUtilisateur.textContent =
-                "Espace Client : gérez vos projets sur KërTech Talent !";
+} else if (data.utilisateur.role === "client") {
 
-            // Masquer l'espace freelance
-            document.getElementById("mesCandidatures").hidden = true;
+    roleUtilisateur.textContent =
+        "Espace Client : gérez vos projets sur KërTech Talent !";
 
-        } else {
+    // Masquer le tableau de bord freelance
+    document.getElementById("mesCandidatures").hidden = true;
+
+    // Afficher le tableau de bord client
+    document.getElementById("dashboardClient").hidden = false;
+
+// Charger les statistiques du client
+chargerStatistiquesClient();
+
+console.log("TEST : chargement automatique des candidatures client");
+// Charger les candidatures du client
+chargerCandidaturesClient();
+
+}
+
+
+        
+        else {
 
             roleUtilisateur.textContent =
                 "Votre rôle : " + data.utilisateur.role;
@@ -1817,15 +2210,24 @@ btnDeconnexion.addEventListener("click", async function () {
 
         const resultat = await reponse.json();
 
-        if (!reponse.ok) {
-            throw new Error(resultat.erreur || "Erreur de déconnexion.");
-        }
+        
+ // Effacer l'utilisateur connecté
+ utilisateurConnecte = null;
+
+ // Actualiser les autorisations des projets
+ actualiserBoutonsSuppression();
+
+ // Masquer également l'espace freelance
+ document.getElementById("mesCandidatures").hidden = true;
+
 
         // Masquer le bouton de déconnexion
 btnDeconnexion.hidden = true;
 
 // Masquer l'espace personnel
 document.querySelector("#espaceUtilisateur").hidden = true;
+// Masquer le tableau de bord client
+document.getElementById("dashboardClient").hidden = true;
 
 // Afficher le message de déconnexion
 document.querySelector("#messageConnexion").textContent = resultat.message;
