@@ -334,17 +334,18 @@ envoyerCandidature.addEventListener("click", async function(event) {
     try {
         envoyerCandidature.disabled = true;
 
-        const reponse = await fetch(
-            "http://127.0.0.1:3000/candidatures",
-            {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(candidatureAPI)
-            }
-        );
+       const reponse = await fetch(
+    "/candidatures",
+    {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(candidatureAPI)
+    }
+);
+        
 
         const resultat = await reponse.json();
 
@@ -506,7 +507,7 @@ boutonSupprimer.dataset.clientId = projet.client_id;
             try {
             
 const reponse = await fetch(
-    `http://127.0.0.1:3000/projets/${projet.id}`,
+    `/projets/${projet.id}`,
     {
         method: "DELETE",
         credentials: "include"
@@ -566,7 +567,7 @@ async function chargerStatistiquesClient() {
 
     try {
         const reponse = await fetch(
-            "http://127.0.0.1:3000/client/statistiques",
+            "/client/statistiques",
             {
                 credentials: "include"
             }
@@ -621,7 +622,7 @@ async function chargerCandidaturesClient() {
 
     try {
         const reponse = await fetch(
-            "http://127.0.0.1:3000/client/candidatures",
+            "/client/candidatures",
             {
                 credentials: "include"
             }
@@ -708,7 +709,7 @@ if (candidature.statut === "En attente") {
 
         try {
             const reponse = await fetch(
-                `http://127.0.0.1:3000/candidatures/${candidature.id}/${action}`,
+                `/candidatures/${candidature.id}/${action}`,
                 {
                     method: "PATCH",
                     credentials: "include"
@@ -940,7 +941,7 @@ boutonVoirCandidatures.addEventListener("click", async function () {
 
     try {
         const reponse = await fetch(
-            `http://127.0.0.1:3000/projets/${projet.id}/candidatures`,
+            `/projets/${projet.id}/candidatures`,
             {
                 method: "GET",
                 credentials: "include"
@@ -1058,7 +1059,7 @@ if (candidature.statut === "En attente") {
 
         try {
             const reponse = await fetch(
-                `http://127.0.0.1:3000/candidatures/${candidature.id}/accepter`,
+                `/candidatures/${candidature.id}/accepter`,
                 {
                     method: "PATCH",
                     credentials: "include"
@@ -1111,7 +1112,7 @@ if (candidature.statut === "En attente") {
 
         try {
             const reponse = await fetch(
-                `http://127.0.0.1:3000/candidatures/${candidature.id}/refuser`,
+                `/candidatures/${candidature.id}/refuser`,
                 {
                     method: "PATCH",
                     credentials: "include"
@@ -1185,7 +1186,7 @@ else if (nouveauStatut.textContent === "Statut : En cours") {
 console.log("Statut à envoyer à SQLite :", prochainStatut);
     try {
 
-const response = await fetch(`http://127.0.0.1:3000/projets/${projet.id}`, {
+const response = await fetch(`/projets/${projet.id}`, {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -1539,7 +1540,7 @@ const projetAPI = {
 };
 try {
 
-   await fetch("http://127.0.0.1:3000/projets", {
+   await fetch("/projets", {
     method: "POST",
 
     // Envoyer le cookie de session au serveur
@@ -1802,7 +1803,7 @@ function actualiserBoutonsSuppression() {
 // CHARGEMENT DES PROJETS
 // =========================
 
-fetch("http://127.0.0.1:3000/projets")
+fetch("/projets")
     .then((response) => {
         if (!response.ok) {
             throw new Error("Impossible de charger les projets.");
@@ -1858,7 +1859,7 @@ const donneesInscription = {
     mot_de_passe: motDePasseUtilisateur,
     role: roleUtilisateur
 };
-fetch("http://127.0.0.1:3000/inscription", {
+fetch("/inscription", {
     method: "POST",
     headers: {
         "Content-Type": "application/json"
@@ -1906,7 +1907,7 @@ formConnexion.addEventListener("submit", function(event) {
     email: emailConnexion,
     mot_de_passe: motDePasseConnexion
 };
-fetch("http://127.0.0.1:3000/connexion", {
+fetch("/connexion", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -2019,7 +2020,7 @@ async function chargerMesCandidatures() {
     try {
 
         const reponse = await fetch(
-            "http://127.0.0.1:3000/mes-candidatures",
+            "/mes-candidatures",
             {
                 method: "GET",
                 credentials: "include"
@@ -2116,7 +2117,7 @@ date.textContent = `Date : ${dateFormatee} à ${heure}`;
 // Sélection du bouton de déconnexion
 const btnDeconnexion = document.querySelector("#btnDeconnexion");
 // Vérifier la session au chargement de la page
-fetch("http://127.0.0.1:3000/session", {
+fetch("/session", {
     method: "GET",
     credentials: "include"
 })
@@ -2203,7 +2204,7 @@ chargerCandidaturesClient();
 btnDeconnexion.addEventListener("click", async function () {
 
     try {
-        const reponse = await fetch("http://127.0.0.1:3000/deconnexion", {
+        const reponse = await fetch("/deconnexion", {
             method: "POST",
             credentials: "include"
         });

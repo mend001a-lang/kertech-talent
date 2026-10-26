@@ -9,6 +9,11 @@ const session = require("express-session");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
+// Servir uniquement les fichiers du dossier public
+app.use(express.static("public"));
+
 const db = new sqlite3.Database("./kertech.db", (err) => {
     if (err) {
         console.error("Erreur de connexion SQLite :", err.message);
@@ -35,7 +40,7 @@ db.run("PRAGMA foreign_keys = ON", (err) => {
     });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // =====================================
 // CONFIGURATION DU SERVEUR
@@ -55,7 +60,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000
     }
@@ -119,7 +124,9 @@ db.run(`
 // =====================================
 
 app.get("/", (req, res) => {
-    res.send("Bienvenue sur le serveur KërTech Talent !");
+    res.sendFile("index.html", {
+        root: __dirname + "/public"
+    });
 });
 
 // =====================================
