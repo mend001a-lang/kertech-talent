@@ -4,6 +4,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
+const initialiserDatabase = require("./initialiser-db");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
 
@@ -1493,12 +1494,20 @@ app.get("/client/statistiques", (req, res) => {
 });
 
 
-// =====================================
-// DÉMARRAGE DU SERVEUR
-// =====================================
+// Initialiser les tables avant de démarrer le serveur
+initialiserDatabase(db)
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(
+                `Serveur KërTech Talent démarré sur le port ${PORT}`
+            );
+        });
+    })
+    .catch((err) => {
+        console.error(
+            "Erreur lors de l'initialisation SQLite :",
+            err.message
+        );
 
-app.listen(PORT, () => {
-    console.log(
-        `Serveur KërTech Talent démarré sur le port ${PORT}`
-    );
-});
+        process.exit(1);
+    });
