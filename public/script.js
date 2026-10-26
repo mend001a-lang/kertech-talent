@@ -355,14 +355,34 @@ envoyerCandidature.addEventListener("click", async function(event) {
             return;
         }
 
-       // Afficher le message de succès
+       // 5. Confirmer la candidature
 messageSuccesCandidature.textContent =
     "Candidature enregistrée avec succès !";
 
-// Effacer le message après 5 secondes
+// Vider immédiatement le champ
+messageCandidature.value = "";
+
+// Vérifier que le champ est bien vidé
+console.log(
+    "Champ après envoi :",
+    messageCandidature.value
+);
+
+// Fermer le formulaire après 2 secondes
 setTimeout(() => {
+
+    // Masquer le formulaire
+    formulaireCandidature.hidden = true;
+
+    // Remettre le bouton dans son état initial
+    bouton.textContent = "Postuler";
+
+    // Effacer le message de confirmation
     messageSuccesCandidature.textContent = "";
-}, 5000);
+
+    console.log("Formulaire fermé :", formulaireCandidature.hidden);
+
+}, 2000);
 
         // 6. Actualiser le compteur affiché
         projet.candidatures = (projet.candidatures || 0) + 1;
