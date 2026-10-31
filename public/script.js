@@ -10,6 +10,7 @@ const email = document.querySelector("#email");
 const message = document.querySelector("#message");
 const messageErreur = document.querySelector("#messageErreur");
 let utilisateurConnecte = null;
+let versionSession = 0;
 
 
 // Formulaire de projet
@@ -636,7 +637,8 @@ async function chargerStatistiquesClient() {
 
 async function chargerCandidaturesClient() {
 // Mémoriser le client au début du chargement
-const clientIdAuDepart = utilisateurConnecte?.id;    
+const clientIdAuDepart = utilisateurConnecte?.id; 
+const versionAuDepart = versionSession;   
 
     const liste = document.getElementById("listeCandidaturesClient");
     const message = document.getElementById("messageCandidaturesClient");
@@ -663,9 +665,11 @@ const clientIdAuDepart = utilisateurConnecte?.id;
 
         const candidatures = await reponse.json();
         // Vérifier que le client connecté n'a pas changé
+// Ignorer les réponses des anciennes sessions
 if (
     !clientIdAuDepart ||
-    utilisateurConnecte?.id !== clientIdAuDepart
+    utilisateurConnecte?.id !== clientIdAuDepart ||
+    versionSession !== versionAuDepart
 ) {
     return;
 }
@@ -753,7 +757,6 @@ if (candidature.statut === "En attente") {
             );
 
             const resultat = await reponse.json();
-
             if (!reponse.ok) {
                 throw new Error(
                     resultat.erreur || "Impossible de traiter la candidature."
@@ -794,11 +797,24 @@ liste.appendChild(carte);
         });
 
     } catch (erreur) {
-        console.error("Erreur candidatures client :", erreur.message);
 
-        message.textContent =
-            "Erreur lors du chargement des candidatures.";
+    // Ignorer les erreurs des anciennes sessions
+    if (
+        !clientIdAuDepart ||
+        utilisateurConnecte?.id !== clientIdAuDepart ||
+        versionSession !== versionAuDepart
+    ) {
+        return;
     }
+
+    console.error(
+        "Erreur candidatures client :",
+        erreur.message
+    );
+
+    message.textContent =
+        "Erreur lors du chargement des candidatures.";
+}
 }
 
 
@@ -2014,6 +2030,7 @@ bienvenueUtilisateur.textContent =
     
  // Mémoriser l'utilisateur connecté
  utilisateurConnecte = data.utilisateur;
+ versionSession++;
 
  // Actualiser les boutons selon le nouvel utilisateur
  actualiserBoutonsSuppression();
@@ -2286,9 +2303,15 @@ btnDeconnexion.addEventListener("click", async function () {
 
         const resultat = await reponse.json();
 
-        
+        if (!reponse.ok) {
+    throw new Error(
+        resultat.erreur || "La déconnexion a échoué."
+    );
+}
  // Effacer l'utilisateur connecté
  utilisateurConnecte = null;
+ // Invalider les anciens chargements
+versionSession++;
 
  // Actualiser les autorisations des projets
  actualiserBoutonsSuppression();
