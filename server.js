@@ -541,11 +541,9 @@ app.post("/candidatures", (req, res) => {
                     }
 
 
-                    console.log("SECURITE DELETE :", {
-                    projetId,
-                    clientId,
-                  autorise: Boolean(projet)
-                   });
+                   console.log("Vérification du projet :", {
+    autorise: Boolean(projet)
+});
                     if (!projet) {
                         return res.status(404).json({
                             erreur: "Projet introuvable."

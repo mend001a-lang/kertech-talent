@@ -635,6 +635,8 @@ async function chargerStatistiquesClient() {
 ===================================== */
 
 async function chargerCandidaturesClient() {
+// Mémoriser le client au début du chargement
+const clientIdAuDepart = utilisateurConnecte?.id;    
 
     const liste = document.getElementById("listeCandidaturesClient");
     const message = document.getElementById("messageCandidaturesClient");
@@ -660,6 +662,13 @@ async function chargerCandidaturesClient() {
         }
 
         const candidatures = await reponse.json();
+        // Vérifier que le client connecté n'a pas changé
+if (
+    !clientIdAuDepart ||
+    utilisateurConnecte?.id !== clientIdAuDepart
+) {
+    return;
+}
 
         console.log("Candidatures reçues :", candidatures);
 
@@ -1205,6 +1214,14 @@ const statutActuel = projet.statut.trim().toLowerCase();
 if (statutActuel !== "en cours") {
     return;
 }
+// Demander confirmation avant de terminer le projet
+const confirmation = window.confirm(
+    "Voulez-vous vraiment marquer ce projet comme terminé ?"
+);
+
+if (!confirmation) {
+    return;
+}
 // Préparer le nouveau statut
 const prochainStatut = "terminé";
 console.log("Statut à envoyer à SQLite :", prochainStatut);
@@ -1349,12 +1366,9 @@ formulaire.addEventListener(
 
             return;
         }
-
-
         if (
             emailUtilisateur.trim() === ""
         ) {
-
             messageErreur.textContent =
                 "Veuillez saisir votre email.";
 
@@ -2036,10 +2050,10 @@ if (data.utilisateur.role === "freelance") {
 
     // Charger les statistiques du client
     chargerStatistiquesClient();
+
+    // Charger les candidatures reçues du client
+    chargerCandidaturesClient();
 }
-
-
-
     // Rendre l'espace personnel visible
     espaceUtilisateur.hidden = false;
 }
@@ -2292,6 +2306,12 @@ document.getElementById("formConnexion").hidden = false;
 document.querySelector("#espaceUtilisateur").hidden = true;
 // Masquer le tableau de bord client
 document.getElementById("dashboardClient").hidden = true;
+
+// Effacer les anciennes candidatures du client
+document.getElementById("listeCandidaturesClient").replaceChildren();
+
+// Effacer l'ancien message
+document.getElementById("messageCandidaturesClient").textContent = "";
 
 // Afficher le message de déconnexion
 document.querySelector("#messageConnexion").textContent = resultat.message;
