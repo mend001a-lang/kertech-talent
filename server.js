@@ -7,6 +7,7 @@ const sqlite3 = require("sqlite3").verbose();
 const initialiserDatabase = require("./initialiser-db");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
+const SQLiteStore = require("connect-sqlite3")(session);
 
 const app = express();
 
@@ -56,6 +57,10 @@ app.use(express.json());
 
 app.use(session({
     name: "kertech.sid",
+    store: new SQLiteStore({
+        db: "kertech-sessions.db",
+        dir: "./"
+    }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -352,7 +357,7 @@ app.get("/session", (req, res) => {
     });
 });
 
-    
+
 // =====================================
 // LISTE DES PROJETS
 // =====================================
@@ -535,6 +540,12 @@ app.post("/candidatures", (req, res) => {
                         });
                     }
 
+
+                    console.log("SECURITE DELETE :", {
+                    projetId,
+                    clientId,
+                  autorise: Boolean(projet)
+                   });
                     if (!projet) {
                         return res.status(404).json({
                             erreur: "Projet introuvable."
@@ -752,6 +763,10 @@ app.get("/mes-candidatures", (req, res) => {
    ACCEPTER UNE CANDIDATURE
 ========================================== */
 
+// ==========================================
+// ACCEPTER UNE CANDIDATURE
+// ==========================================
+
 app.patch("/candidatures/:id/accepter", (req, res) => {
 
     // 1. Vérifier la connexion
@@ -761,16 +776,16 @@ app.patch("/candidatures/:id/accepter", (req, res) => {
         });
     }
 
-    // 2. Vérifier l'identifiant
     const candidatureId = Number(req.params.id);
 
+    // 2. Vérifier l'identifiant
     if (!Number.isSafeInteger(candidatureId) || candidatureId <= 0) {
         return res.status(400).json({
             erreur: "Identifiant de candidature invalide."
         });
     }
 
-    // 3. Vérifier que l'utilisateur est client
+    // 3. Vérifier le rôle client
     db.get(
         "SELECT role FROM utilisateurs WHERE id = ?",
         [req.session.userId],
@@ -788,69 +803,173 @@ app.patch("/candidatures/:id/accepter", (req, res) => {
                 });
             }
 
-            // 4. Vérifier que la candidature appartient
-            // à un projet possédé par ce client
-            db.get(
-                `SELECT c.id, c.statut
-                 FROM candidatures AS c
-                 JOIN projets AS p ON c.projet_id = p.id
-                 WHERE c.id = ? AND p.client_id = ?`,
-                [candidatureId, req.session.userId],
-                (err, candidature) => {
+            // 4. Démarrer une transaction
+            db.serialize(() => {
+
+                db.run("BEGIN IMMEDIATE TRANSACTION", (err) => {
 
                     if (err) {
                         return res.status(500).json({
-                            erreur: "Erreur de vérification de la candidature."
+                            erreur: "Impossible de démarrer l'opération."
                         });
                     }
 
-                    if (!candidature) {
-                        return res.status(403).json({
-                            erreur: "Candidature introuvable ou accès interdit."
+                    // Annuler les modifications en cas d'échec
+                    function annuler(statutHTTP, message) {
+
+                        db.run("ROLLBACK", (rollbackErr) => {
+
+                            if (rollbackErr) {
+                                console.error(
+                                    "Erreur ROLLBACK :",
+                                    rollbackErr.message
+                                );
+                            }
+
+                            return res.status(statutHTTP).json({
+                                erreur: message
+                            });
                         });
                     }
 
-                    // 5. Accepter uniquement une candidature en attente
-                    if (candidature.statut !== "En attente") {
-                        return res.status(409).json({
-                            erreur: "Cette candidature n'est plus en attente."
-                        });
-                    }
-
-                    // 6. Enregistrer l'acceptation dans SQLite
-                    db.run(
-                        `UPDATE candidatures
-                         SET statut = ?
-                         WHERE id = ? AND statut = ?`,
-                        ["Acceptée", candidatureId, "En attente"],
-                        function(err) {
+                    // 5. Vérifier la candidature et le projet
+                    db.get(
+                        `SELECT
+                            c.id,
+                            c.statut AS statut_candidature,
+                            c.projet_id,
+                            p.statut AS statut_projet
+                         FROM candidatures AS c
+                         JOIN projets AS p ON c.projet_id = p.id
+                         WHERE c.id = ? AND p.client_id = ?`,
+                        [candidatureId, req.session.userId],
+                        (err, candidature) => {
 
                             if (err) {
-                                return res.status(500).json({
-                                    erreur: "Impossible d'accepter la candidature."
-                                });
+                                return annuler(
+                                    500,
+                                    "Erreur de vérification de la candidature."
+                                );
                             }
 
-                            if (this.changes === 0) {
-                                return res.status(409).json({
-                                    erreur: "La candidature a déjà changé de statut."
-                                });
+                            if (!candidature) {
+                                return annuler(
+                                    403,
+                                    "Candidature introuvable ou accès interdit."
+                                );
                             }
 
-                            return res.status(200).json({
-                                message: "Candidature acceptée avec succès.",
-                                candidature_id: candidatureId,
-                                statut: "Acceptée"
-                            });
+                            if (candidature.statut_candidature !== "En attente") {
+                                return annuler(
+                                    409,
+                                    "Cette candidature n'est plus en attente."
+                                );
+                            }
+
+                            if (candidature.statut_projet !== "ouvert") {
+                                return annuler(
+                                    409,
+                                    "Ce projet n'est plus ouvert."
+                                );
+                            }
+
+                            // 6. Accepter la candidature
+                            db.run(
+                                `UPDATE candidatures
+                                 SET statut = 'Acceptée'
+                                 WHERE id = ? AND statut = 'En attente'`,
+                                [candidatureId],
+                                function (err) {
+
+                                    if (err) {
+                                        return annuler(
+                                            500,
+                                            "Impossible d'accepter la candidature."
+                                        );
+                                    }
+
+                                    if (this.changes !== 1) {
+                                        return annuler(
+                                            409,
+                                            "La candidature a changé de statut."
+                                        );
+                                    }
+
+                                    // 7. Passer le projet en cours
+                                    db.run(
+                                        `UPDATE projets
+                                         SET statut = 'en cours'
+                                         WHERE id = ? AND statut = 'ouvert'`,
+                                        [candidature.projet_id],
+                                        function (err) {
+
+                                            if (err) {
+                                                return annuler(
+                                                    500,
+                                                    "Impossible de modifier le projet."
+                                                );
+                                            }
+
+                                            if (this.changes !== 1) {
+                                                return annuler(
+                                                    409,
+                                                    "Le projet a changé de statut."
+                                                );
+                                            }
+
+                                            // 8. Refuser les autres candidatures
+                                            db.run(
+                                                `UPDATE candidatures
+                                                 SET statut = 'Refusée'
+                                                 WHERE projet_id = ?
+                                                   AND id != ?
+                                                   AND statut = 'En attente'`,
+                                                [
+                                                    candidature.projet_id,
+                                                    candidatureId
+                                                ],
+                                                (err) => {
+
+                                                    if (err) {
+                                                        return annuler(
+                                                            500,
+                                                            "Impossible de mettre à jour les autres candidatures."
+                                                        );
+                                                    }
+
+                                                    // 9. Valider la transaction
+                                                    db.run("COMMIT", (err) => {
+
+                                                        if (err) {
+                                                            return annuler(
+                                                                500,
+                                                                "Impossible de finaliser l'acceptation."
+                                                            );
+                                                        }
+
+                                                        return res.status(200).json({
+                                                            message: "Candidature acceptée et projet en cours.",
+                                                            candidature_id: candidatureId,
+                                                            projet_id: candidature.projet_id,
+                                                            statut: "Acceptée",
+                                                            statut_projet: "en cours"
+                                                        });
+                                                    });
+                                                }
+                                            );
+                                        }
+                                    );
+                                }
+                            );
                         }
                     );
-                }
-            );
+                });
+            });
         }
     );
 });
 
-    
+
 /* ==========================================
    REFUSER UNE CANDIDATURE
 ========================================== */
@@ -925,7 +1044,7 @@ app.patch("/candidatures/:id/refuser", (req, res) => {
                          SET statut = ?
                          WHERE id = ? AND statut = ?`,
                         ["Refusée", candidatureId, "En attente"],
-                        function(err) {
+                        function (err) {
 
                             if (err) {
                                 return res.status(500).json({
@@ -976,7 +1095,7 @@ app.patch("/projets/:id", (req, res) => {
     }
 
     // 3. Vérifier le nouveau statut
-    const statutsAutorises = ["ouvert", "En cours", "Terminé"];
+    const statutsAutorises = ["ouvert", "en cours", "terminé"];
 
     if (!statutsAutorises.includes(statut)) {
         return res.status(400).json({
@@ -1004,12 +1123,21 @@ app.patch("/projets/:id", (req, res) => {
                 });
             }
 
-            // 5. Modifier uniquement un projet du client
+            // 5. Autoriser uniquement la fin d'une mission
+            if (statut !== "terminé") {
+                return res.status(400).json({
+                    erreur: "Seul le passage à terminé est autorisé ici."
+                });
+            }
+
+            // 6. Modifier uniquement un projet en cours appartenant au client
             db.run(
                 `UPDATE projets
-                 SET statut = ?
-                 WHERE id = ? AND client_id = ?`,
-                [statut, projetId, req.session.userId],
+     SET statut = 'terminé'
+     WHERE id = ?
+       AND client_id = ?
+       AND statut = 'en cours'`,
+                [projetId, req.session.userId],
                 function (err) {
 
                     if (err) {
@@ -1021,15 +1149,15 @@ app.patch("/projets/:id", (req, res) => {
                     }
 
                     if (this.changes === 0) {
-                        return res.status(404).json({
-                            erreur: "Projet introuvable ou accès non autorisé."
+                        return res.status(409).json({
+                            erreur: "Projet introuvable, non autorisé ou statut incompatible."
                         });
                     }
 
                     return res.status(200).json({
-                        message: "Statut modifié avec succès !",
+                        message: "Mission terminée avec succès !",
                         id: projetId,
-                        statut: statut
+                        statut: "terminé"
                     });
                 }
             );
@@ -1202,10 +1330,19 @@ app.delete("/projets/:id", (req, res) => {
                                         );
                                     }
 
-                                    // 7. Vérifier le propriétaire
+
+                                    // 7. Vérifier le propriétaire, le statut et les candidatures
                                     transactionDb.get(
-                                        `SELECT id FROM projets
-                                         WHERE id = ? AND client_id = ?`,
+                                        `SELECT p.id
+                                     FROM projets p
+                                    WHERE p.id = ?
+                                    AND p.client_id = ?
+                                   AND p.statut = 'ouvert'
+                                   AND NOT EXISTS (
+                                  SELECT 1
+                                  FROM candidatures c
+                                  WHERE c.projet_id = p.id
+                                   )`,
                                         [projetId, clientId],
                                         (err, projet) => {
 
@@ -1233,27 +1370,7 @@ app.delete("/projets/:id", (req, res) => {
                                                 );
                                             }
 
-                                            // 8. Supprimer les candidatures
-                                            transactionDb.run(
-                                                "DELETE FROM candidatures WHERE projet_id = ?",
-                                                [projetId],
-                                                (err) => {
 
-                                                    if (err) {
-                                                        console.error(
-                                                            "Candidatures :",
-                                                            err.message
-                                                        );
-
-                                                        return annuler(
-                                                            500,
-                                                            "Impossible de supprimer les candidatures."
-                                                        );
-                                                    }
-
-        // AUDIT 15 - Simulation contrôlée d'une erreur
-        
-                                                    // 9. Supprimer le projet
                                                     transactionDb.run(
                                                         `DELETE FROM projets
                                                          WHERE id = ? AND client_id = ?`,
@@ -1326,7 +1443,7 @@ app.delete("/projets/:id", (req, res) => {
             );
         }
     );
-});
+
 
 
 
@@ -1339,11 +1456,11 @@ app.delete("/projets/:id", (req, res) => {
 
 
 
-                                /* =====================================
-                                   CANDIDATURES REÇUES PAR LE CLIENT
-                                ===================================== */
+/* =====================================
+   CANDIDATURES REÇUES PAR LE CLIENT
+===================================== */
 
-                               app.get("/client/candidatures", (req, res) => {
+app.get("/client/candidatures", (req, res) => {
 
     // 1. Vérifier la connexion
     if (!req.session.userId) {

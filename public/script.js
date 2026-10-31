@@ -507,9 +507,15 @@ const estProprietaire =
     Number(utilisateurConnecte.id) === Number(projet.client_id);
 
 // Masquer le bouton si l'utilisateur n'est pas propriétaire
-boutonSupprimer.hidden = !estProprietaire;
+boutonSupprimer.hidden =
+    !estProprietaire ||
+    projet.statut?.trim().toLowerCase() !== "ouvert" ||
+    Number(projet.candidatures) !== 0;
 // Conserver les identifiants nécessaires à l'actualisation
 boutonSupprimer.dataset.clientId = projet.client_id;
+boutonSupprimer.dataset.statut = projet.statut;
+boutonSupprimer.dataset.candidatures =
+    Number(projet.candidatures);
 
 
     boutonSupprimer.addEventListener(
@@ -621,6 +627,7 @@ async function chargerStatistiquesClient() {
         console.error("Erreur statistiques client :", erreur.message);
     }
 }
+
 
 
 /* =====================================
@@ -1184,28 +1191,24 @@ if (candidature.statut === "En attente") {
 
 // Identifier le propriétaire du projet
 boutonStatut.dataset.clientId = projet.client_id;
+boutonStatut.dataset.statut = projet.statut;
 
 // Masquer le bouton par défaut
 boutonStatut.hidden = true;
 
 boutonStatut.addEventListener("click", async function() {
 
-    let prochainStatut;
-if (nouveauStatut.textContent.trim().toLowerCase() === "statut : ouvert") {
-    prochainStatut = "En cours";
-} 
+// Vérifier le statut actuel du projet
+const statutActuel = projet.statut.trim().toLowerCase();
 
-else if (nouveauStatut.textContent === "Statut : En cours") {
-    prochainStatut = "Terminé";
-
-
-} else {
+// Seul un projet en cours peut être terminé manuellement
+if (statutActuel !== "en cours") {
     return;
 }
-    
+// Préparer le nouveau statut
+const prochainStatut = "terminé";
 console.log("Statut à envoyer à SQLite :", prochainStatut);
     try {
-
 const response = await fetch(`/projets/${projet.id}`, {
     method: "PATCH",
     credentials: "include",
@@ -1222,9 +1225,12 @@ if (!response.ok) {
 }
 projet.statut = prochainStatut;
 nouveauStatut.textContent = "Statut : " + prochainStatut;
+boutonStatut.dataset.statut = prochainStatut;
+actualiserBoutonsSuppression();
 boutonPostuler.disabled = true;
 nouvelleCarte.querySelector(".form-candidature").hidden = true;
-
+// Actualiser automatiquement les compteurs du client
+chargerStatistiquesClient();
 } catch (erreur) {
     console.error("Erreur lors du changement de statut :", erreur);
     alert("Impossible de modifier le statut. Veuillez réessayer.");
@@ -1355,19 +1361,14 @@ formulaire.addEventListener(
             messageErreur.classList.remove(
                 "succes"
             );
-
             messageErreur.classList.add(
                 "erreur"
             );
-
             return;
         }
-
-
         if (
             messageUtilisateur.trim() === ""
         ) {
-
             messageErreur.textContent =
                 "Veuillez saisir votre message.";
 
@@ -1378,11 +1379,8 @@ formulaire.addEventListener(
             messageErreur.classList.add(
                 "erreur"
             );
-
             return;
         }
-
-
         if (
             !emailUtilisateur.includes("@")
         ) {
@@ -1590,11 +1588,15 @@ try {
     return data;
 })
 
-.then(function(data) {
+.then(async function(data) {
     console.log("Réponse du serveur :", data);
     console.log("ID SQLite du projet :", data.id);
 
+    // Récupérer l'identifiant du projet enregistré
     projet.id = data.id;
+
+    // Actualiser les compteurs du tableau de bord client
+    await chargerStatistiquesClient();
 });
 } catch (erreur) {
     console.error("Erreur API :", erreur);
@@ -1793,7 +1795,36 @@ function actualiserBoutonsSuppression() {
             Number(utilisateurConnecte.id) ===
             Number(bouton.dataset.clientId);
 
-        bouton.hidden = !estProprietaire;
+        // Vérifier si c'est le bouton Changer le statut
+if (bouton.classList.contains("changer-statut")) {
+
+    const statutProjet =
+        bouton.dataset.statut?.trim().toLowerCase();
+
+    bouton.hidden = !(
+        estProprietaire &&
+        statutProjet === "en cours"
+    );
+
+} else if (bouton.classList.contains("btn-supprimer")) {
+
+    const statutProjet =
+        bouton.dataset.statut?.trim().toLowerCase();
+
+    const nombreCandidatures =
+        Number(bouton.dataset.candidatures);
+
+    bouton.hidden = !(
+        estProprietaire &&
+        statutProjet === "ouvert" &&
+        nombreCandidatures === 0
+    );
+
+} else {
+
+    bouton.hidden = !estProprietaire;
+
+}
 
     });
 
@@ -1945,8 +1976,14 @@ fetch("/connexion", {
    // Si la connexion est réussie
 if (data.utilisateur && !data.erreur) {
 
-    // Afficher le bouton de déconnexion
-btnDeconnexion.hidden = false;
+    // Vérifier que le masquage est exécuté
+    console.log("Connexion réussie : masquage du formulaire");
+
+    formConnexion.hidden = true;
+
+    console.log("Formulaire masqué :", formConnexion.hidden);
+
+    btnDeconnexion.hidden = false;
 
 // Récupérer les éléments HTML
 const espaceUtilisateur = document.getElementById("espaceUtilisateur");
@@ -2146,9 +2183,13 @@ fetch("/session", {
 .then(data => {
 
     // Vérifier si l'utilisateur est connecté
-    if (data.connecte === true && data.utilisateur) {
-        // Mémoriser l'utilisateur après actualisation
-utilisateurConnecte = data.utilisateur;
+if (data.connecte === true && data.utilisateur) {
+
+    // Masquer le formulaire si la session est active
+    document.getElementById("formConnexion").hidden = true;
+
+    // Mémoriser l'utilisateur après actualisation
+    utilisateurConnecte = data.utilisateur;
 
 console.log("Session restaurée :", utilisateurConnecte);
 actualiserBoutonsSuppression();
@@ -2244,6 +2285,8 @@ btnDeconnexion.addEventListener("click", async function () {
 
         // Masquer le bouton de déconnexion
 btnDeconnexion.hidden = true;
+// Réafficher le formulaire de connexion
+document.getElementById("formConnexion").hidden = false;
 
 // Masquer l'espace personnel
 document.querySelector("#espaceUtilisateur").hidden = true;
@@ -2258,5 +2301,44 @@ document.querySelector("#messageConnexion").textContent = resultat.message;
         document.querySelector("#messageConnexion").textContent =
             "Impossible de se déconnecter.";
     }
+
+});
+
+// =========================
+// MENU BURGER RESPONSIVE
+// =========================
+
+const menuBurger = document.querySelector("#menuBurger");
+const navigationPrincipale = document.querySelector("#navigationPrincipale");
+
+if (menuBurger && navigationPrincipale) {
+
+    menuBurger.addEventListener("click", function () {
+
+        const estOuvert = navigationPrincipale.classList.toggle("ouvert");
+
+        menuBurger.setAttribute("aria-expanded", String(estOuvert));
+
+        menuBurger.setAttribute(
+            "aria-label",
+            estOuvert ? "Fermer le menu" : "Ouvrir le menu"
+        );
+
+    });
+
+}
+// Fermer le menu burger après un clic sur un lien
+
+document.querySelectorAll("#navigationPrincipale a").forEach(function(lien) {
+
+    lien.addEventListener("click", function() {
+
+        navigationPrincipale.classList.remove("ouvert");
+
+        menuBurger.setAttribute("aria-expanded", "false");
+
+        menuBurger.setAttribute("aria-label", "Ouvrir le menu");
+
+    });
 
 });

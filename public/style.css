@@ -561,3 +561,234 @@ footer nav a {
     margin-top: 12px;
     font-weight: 400;
 }
+
+/* =====================================
+   INSCRIPTION ET CONNEXION
+===================================== */
+
+#inscription,
+#connexion {
+    width: 90%;
+    max-width: 550px;
+    margin: 50px auto;
+    padding: 35px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+}
+
+/* Titres */
+#inscription h2,
+#connexion h2 {
+    color: #1F2937;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Paragraphes de présentation */
+#inscription > p,
+#connexion > p {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+/* Formulaires */
+#formInscription,
+#formConnexion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Champs */
+#formInscription input,
+#formInscription select,
+#formConnexion input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+/* Boutons */
+#btnInscription,
+#btnConnexion {
+    background-color: #00DF89;
+    color: #1F2937;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#btnInscription:hover,
+#btnConnexion:hover {
+    background-color: #00bd75;
+}
+
+/* Adaptation aux mobiles */
+@media (max-width: 600px) {
+    #inscription,
+    #connexion {
+        margin: 25px 15px;
+        padding: 20px;
+    }
+}
+#formConnexion[hidden] {
+    display: none;
+}
+
+/* =====================================
+   MASQUER LE FORMULAIRE PROJET
+   LORSQU'IL EST FERMÉ
+===================================== */
+
+#formProjet[hidden] {
+    display: none;
+}
+/* =====================================
+   CONTACT KËRTECH TALENT
+===================================== */
+
+#contactKTT {
+    width: 90%;
+    max-width: 550px;
+    margin: 60px auto;
+    padding: 35px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+}
+
+/* Titre */
+#contactKTT h2 {
+    color: #1F2937;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Texte de présentation */
+#contactKTT > p {
+    text-align: center;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+/* Organisation du formulaire */
+#formContact {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Champs */
+#formContact input,
+#formContact textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font: inherit;
+}
+
+/* Zone de message */
+#formContact textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Bouton Envoyer */
+#formContact button[type="submit"] {
+    background-color: #00DF89;
+    color: #1F2937;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#formContact button[type="submit"]:hover {
+    background-color: #00bd75;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    #contactKTT {
+        margin: 30px auto;
+        padding: 20px;
+    }
+}
+/* =========================
+   MENU BURGER RESPONSIVE
+========================= */
+
+/* Sur ordinateur : cacher le bouton burger */
+.menu-burger {
+    display: none;
+}
+
+/* Sur smartphone */
+@media (max-width: 768px) {
+
+    header {
+        position: relative;
+    }
+
+    /* Afficher le bouton burger */
+    .menu-burger {
+        display: block;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+    }
+
+    /* Cacher le menu par défaut */
+    #navigationPrincipale {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #1F2937;
+        padding: 20px;
+        box-sizing: border-box;
+        z-index: 1000;
+    }
+
+    /* Afficher le menu lorsqu'il est ouvert */
+    #navigationPrincipale.ouvert {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    #navigationPrincipale a {
+        color: white;
+        text-decoration: none;
+    }
+
+header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+}
