@@ -6,17 +6,22 @@ const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
 const initialiserDatabase = require("./initialiser-db");
 const bcrypt = require("bcrypt");
+const { rateLimit } = require("express-rate-limit");
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 
 const app = express();
 
-app.set("trust proxy", 1);
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
 
 // Servir uniquement les fichiers du dossier public
 app.use(express.static("public"));
 
-const db = new sqlite3.Database("./kertech.db", (err) => {
+const cheminDB = process.env.DB_PATH || "./kertech.db";
+
+const db = new sqlite3.Database(cheminDB, (err) => {
     if (err) {
         console.error("Erreur de connexion SQLite :", err.message);
     } else {
@@ -57,10 +62,10 @@ app.use(express.json());
 
 app.use(session({
     name: "kertech.sid",
-    store: new SQLiteStore({
-        db: "kertech-sessions.db",
-        dir: "./"
-    }),
+   store: new SQLiteStore({
+    db: "kertech-sessions.db",
+    dir: process.env.SESSION_DB_DIR || "./"
+}),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -159,7 +164,7 @@ app.post("/inscription", async (req, res) => {
         });
     }
 
-    const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+   const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailValide.test(email.trim())) {
         return res.status(400).json({
@@ -220,11 +225,26 @@ app.post("/inscription", async (req, res) => {
     }
 });
 
+
+// =====================================
+// LIMITATION DES TENTATIVES DE CONNEXION
+// =====================================
+
+const limiteurConnexion = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+        erreur: "Trop de tentatives de connexion. Réessayez dans 15 minutes."
+    }
+});
+
 // =====================================
 // CONNEXION
 // =====================================
 
-app.post("/connexion", (req, res) => {
+app.post("/connexion", limiteurConnexion, (req, res) => {
     const { email, mot_de_passe } = req.body || {};
 
     if (

@@ -1929,6 +1929,17 @@ formInscription.addEventListener("submit", function(event) {
     const emailUtilisateur = document.getElementById("emailInscription").value.trim();
     const motDePasseUtilisateur = document.getElementById("motDePasseInscription").value;
     const roleUtilisateur = document.getElementById("roleInscription").value;
+    // Vérification du format de l'adresse email
+const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!emailValide.test(emailUtilisateur)) {
+    const messageInscription = document.getElementById("messageInscription");
+
+    messageInscription.textContent = "Veuillez saisir une adresse email valide.";
+    messageInscription.style.color = "red";
+
+    return;
+}
 
 console.log("Nom saisi :", nomUtilisateur);
 console.log("Email saisi :", emailUtilisateur);
