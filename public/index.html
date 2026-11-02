@@ -473,272 +473,42 @@
             </form>
 
 
-            <!-- MESSAGE PROJET -->
+<!-- MESSAGE PROJET -->
+<p id="messageProjet"></p>
 
-            <p id="messageProjet"></p>
- <div
-                class="cards-grid"
-                id="projetsGrid"
-            >
-
-                <article>
-
-                    <h3>
-                        Créer un site vitrine
-                    </h3>
-
-                    <p>
-                        Recherche d'un développeur pour créer
-                        un site vitrine moderne.
-                    </p>
-
-                  <p class="categorie-projet">
-    Catégorie : Développement web
-</p>
-
-<p class="statut-projet">
-    Statut : Ouvert
-</p>
-<p class="compteur-candidatures">Candidatures : 0</p>
-                    <button class="postuler-projet">
-                     Postuler
-                     </button>
-                     <div class="form-candidature" hidden>
-
-    <textarea
-        class="message-candidature"
-        placeholder="Présentez votre candidature..."
-    ></textarea>
-
-    <<button type="button" class="envoyer-candidature">
-    Envoyer ma candidature
-</button>
-
-    <p class="message-succes-candidature"></p>
-
+<!-- LISTE DES PROJETS -->
+<div class="cards-grid" id="projetsGrid">
+    <!-- Les projets publiés seront affichés ici -->
 </div>
 
-                </article>
+</section>
 
+<!-- ==========================
+     FREELANCES
+========================== -->
 
-                <article>
+<section id="freelances">
 
-                    <h3>
-                        Créer une identité visuelle
-                    </h3>
+    <h2>Nos freelances</h2>
 
-                    <p>
-                        Recherche d'un graphiste pour concevoir
-                        un logo et une charte graphique.
-                    </p>
+    <input
+        type="search"
+        id="rechercheFreelance"
+        placeholder="Rechercher un freelance..."
+    >
 
-                    <p class="categorie-projet">
-                        Catégorie : Graphisme
-                    </p>
+    <div class="cards-grid" id="freelancesGrid">
+        <!-- Les profils des freelances seront affichés ici -->
+    </div>
 
-                    <p class="statut-projet">
-                        Statut : Ouvert
-                    </p>
-                    <p class="compteur-candidatures">Candidatures : 0</p>
+    <p id="compteurFreelances"></p>
 
-                    <button class="postuler-projet">
-                        Postuler
-                    </button>
-                    <div class="form-candidature" hidden>
-
-    <textarea
-        class="message-candidature"
-        placeholder="Présentez votre candidature..."
-    ></textarea>
-
-    <button type="button" class="envoyer-candidature">
-    Envoyer ma candidature
-</button>
-
-    <p class="message-succes-candidature"></p>
-
-</div>
-                </article>
-
-
-                <article>
-
-                    <h3>
-                        Rédiger des contenus web
-                    </h3>
-
-                    <p>
-                        Recherche d'un rédacteur pour créer
-                        des contenus adaptés au web.
-                    </p>
-
-                    <p class="categorie-projet">
-    Catégorie : Développement web
-</p>
-
-<p class="statut-projet">
-    Statut : Ouvert
-</p>
-<p class="compteur-candidatures">Candidatures : 0</p>
-                    <button class="postuler-projet">
-                        
-                    Postuler
-                    </button>
-                    <div class="form-candidature" hidden>
-
-    <textarea
-        class="message-candidature"
-        placeholder="Présentez votre candidature..."
-    ></textarea>
-
-    <button type="button" class="envoyer-candidature">
-    Envoyer ma candidature
-</button>
-
-    <p class="message-succes-candidature"></p>
-
-</div>
-
-                </article>
-
-            </div>
-        </section>
-
-
-        <!-- =========================
-             FREELANCES
-        ========================== -->
-
-        <section id="freelances">
-
-            <h2>Nos freelances</h2>
-            <input
-    type="search"
-    id="rechercheFreelance"
-    placeholder="Rechercher un freelance..."
->
-
-           <div class="cards-grid" id="freelancesGrid">
-
-               <article>
-    <h3>Aminata Diop</h3>
-    <p>Développeuse web</p>
-    <p>
-        Compétences : HTML, CSS, JavaScript
+    <p id="aucunFreelance" hidden>
+        Aucun freelance trouvé
     </p>
-    <div class="details-profil" hidden>
-    <p>Disponible pour des missions de développement web.</p>
-</div>
 
+</section>
 
-    <button class="voir-profil">Voir le profil</button>
-    <button class="contacter-freelance">Contacter</button>
-   <div class="form-contact-freelance" hidden>
-
-    <textarea
-        class="message-freelance"
-        placeholder="Votre message..."
-    ></textarea>
-
-    <button class="envoyer-message">
-        Envoyer
-    </button>
-
-    <p class="message-succes-freelance"></p>
-
-</div>
-</article>
-
-
-                <article>
-
-                    <h3>Moussa Ndiaye</h3>
-
-                    <p>
-                        Graphiste
-                    </p>
-
-                    <p>
-                        Compétences : Logo, identité visuelle, Photoshop
-                    </p>
-                    <div class="details-profil" hidden>
-    <p>Disponible pour des missions de création graphique.</p>
-</div>
-                    <button class="voir-profil">Voir le profil</button>
-                    <button class="contacter-freelance">
-    Contacter
-</button>
-
-<div class="form-contact-freelance" hidden>
-
-    <textarea
-        class="message-freelance"
-        placeholder="Votre message..."
-    ></textarea>
-
-    <button class="envoyer-message">
-        Envoyer
-    </button>
-
-    <p class="message-succes-freelance"></p>
-
-</div>
-
-                </article>
-
-
-                <article>
-
-                    <h3>Fatou Sow</h3>
-
-                    <p>
-                        Rédactrice web
-                    </p>
-
-                    <p>
-                        Compétences : Articles, SEO, communication
-                    </p>
-                    <div class="details-profil" hidden>
-    <p>Disponible pour des missions de rédaction web et SEO.</p>
-</div>
-                    
-                    <button class="voir-profil">Voir le profil</button>
-                    <button class="contacter-freelance">
-    Contacter
-</button>
-
-<div class="form-contact-freelance" hidden>
-
-    <textarea
-        class="message-freelance"
-        placeholder="Votre message..."
-    ></textarea>
-
-    <button class="envoyer-message">
-        Envoyer
-    </button>
-
-    <p class="message-succes-freelance"></p>
-
-</div>
-
-                </article>
-</div>
-
-<p id="compteurFreelances"></p>
-
-<p id="aucunFreelance" hidden>
-    Aucun freelance trouvé
-</p>
-
-        </section>
-
-
-        <!-- =========================
-             CONTACT
-        ========================== -->
-
-        <section>
 
             <!-- =========================
      CONTACT KËRTECH TALENT

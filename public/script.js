@@ -170,6 +170,7 @@ boutonsContacter.forEach(function(bouton) {
 // ==================================================
 
 function filtrerFreelances() {
+    const cartesFreelances = freelancesGrid.querySelectorAll("article");
 
     const texteRecherche =
         rechercheFreelance.value
