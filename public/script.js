@@ -234,9 +234,6 @@ rechercheFreelance.addEventListener(
 // ==================================================
 // CANDIDATURE AUX PROJETS
 // ==================================================
-
-
-
 function activerCandidature(carteProjet, projet) {
 
     const formulaireCandidature =
@@ -275,7 +272,27 @@ function activerCandidature(carteProjet, projet) {
     ) {
         return;
     }
+// Vérifier si le projet accepte les candidatures
+const statutProjet = (projet.statut || "")
+    .trim()
+    .toLowerCase();
 
+if (statutProjet !== "ouvert") {
+
+    // Désactiver le bouton de candidature
+    bouton.disabled = true;
+
+    // Masquer le formulaire
+    formulaireCandidature.hidden = true;
+
+    // Adapter le texte du bouton
+    bouton.textContent =
+        statutProjet === "terminé" || statutProjet === "termine"
+            ? "Projet terminé"
+            : "Candidatures closes";
+
+    return;
+}
 
     // Ouvrir / fermer
     bouton.addEventListener(
@@ -350,11 +367,21 @@ envoyerCandidature.addEventListener("click", async function(event) {
 
         const resultat = await reponse.json();
 
-        if (!reponse.ok) {
-            messageSuccesCandidature.textContent =
-                resultat.erreur || "Erreur lors de la candidature.";
-            return;
-        }
+       if (!reponse.ok) {
+    messageSuccesCandidature.textContent =
+        resultat.erreur || "Erreur lors de la candidature.";
+
+    // Fermer le formulaire si le freelance a déjà postulé
+    if (reponse.status === 409) {
+        setTimeout(() => {
+            formulaireCandidature.hidden = true;
+            bouton.textContent = "Postuler";
+            messageSuccesCandidature.textContent = "";
+        }, 2000);
+    }
+
+    return;
+}
 
        // 5. Confirmer la candidature
 messageSuccesCandidature.textContent =

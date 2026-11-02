@@ -48,8 +48,22 @@ function initialiserDatabase(db) {
                             return reject(err);
                         }
 
-                        console.log("Tables SQLite initialisées !");
-                        resolve();
+                        // Empêcher plusieurs candidatures
+// du même freelance sur un même projet
+db.run(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    idx_candidatures_projet_freelance
+    ON candidatures(projet_id, freelance_id)
+`, (err) => {
+
+    if (err) {
+        return reject(err);
+    }
+
+    console.log("Index UNIQUE des candidatures vérifié !");
+    console.log("Tables SQLite initialisées !");
+    resolve();
+});
                     });
                 });
             });

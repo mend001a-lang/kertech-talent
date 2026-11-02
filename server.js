@@ -579,33 +579,57 @@ app.post("/candidatures", (req, res) => {
                         });
                     }
 
-                    // 5. Enregistrer la candidature
-                    db.run(
-                        `INSERT INTO candidatures
-                         (projet_id, freelance_id, message, statut)
-                         VALUES (?, ?, ?, ?)`,
-                        [
-                            projet_id,
-                            req.session.userId,
-                            message.trim(),
-                            "En attente"
-                        ],
-                        function (err) {
+                  // 5. Vérifier si le freelance a déjà postulé
+db.get(
+    `SELECT id FROM candidatures
+     WHERE projet_id = ? AND freelance_id = ?
+     LIMIT 1`,
+    [projet_id, req.session.userId],
+    (err, candidatureExistante) => {
 
-                            if (err) {
-                                console.error("Erreur candidature :", err.message);
+        if (err) {
+            console.error("Erreur vérification candidature :", err.message);
 
-                                return res.status(500).json({
-                                    erreur: "Impossible d'enregistrer la candidature."
-                                });
-                            }
+            return res.status(500).json({
+                erreur: "Erreur lors de la vérification de la candidature."
+            });
+        }
 
-                            return res.status(201).json({
-                                message: "Candidature envoyée avec succès !",
-                                id: this.lastID
-                            });
-                        }
-                    );
+        if (candidatureExistante) {
+            return res.status(409).json({
+                erreur: "Vous avez déjà postulé à ce projet."
+            });
+        }
+
+        // 6. Enregistrer la candidature
+        db.run(
+            `INSERT INTO candidatures
+             (projet_id, freelance_id, message, statut)
+             VALUES (?, ?, ?, ?)`,
+            [
+                projet_id,
+                req.session.userId,
+                message.trim(),
+                "En attente"
+            ],
+            function (err) {
+
+                if (err) {
+                    console.error("Erreur candidature :", err.message);
+
+                    return res.status(500).json({
+                        erreur: "Impossible d'enregistrer la candidature."
+                    });
+                }
+
+                return res.status(201).json({
+                    message: "Candidature envoyée avec succès !",
+                    id: this.lastID
+                });
+            }
+        );
+    }
+);
                 }
             );
         }
