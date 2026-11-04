@@ -9,7 +9,12 @@ db.run(`
         categorie TEXT NOT NULL,
         statut TEXT NOT NULL,
         description TEXT,
-        budget REAL
+        budget REAL,
+        client_id INTEGER NOT NULL,
+        localisation TEXT,
+        debut_mission TEXT,
+        date_precise TEXT,
+        FOREIGN KEY (client_id) REFERENCES utilisateurs(id)
     )
 `);
 db.run(`

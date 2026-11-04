@@ -2,6 +2,16 @@ function initialiserDatabase(db) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
             db.run("PRAGMA foreign_keys = ON");
+            db.get("PRAGMA foreign_keys", (err, resultat) => {
+    if (err) {
+        console.error("Erreur vérification SQLite :", err.message);
+    } else {
+        console.log(
+            "Protection des clés étrangères SQLite :",
+            resultat.foreign_keys === 1 ? "ACTIVÉE" : "DÉSACTIVÉE"
+        );
+    }
+});
 
             db.run(`
                 CREATE TABLE IF NOT EXISTS utilisateurs (
@@ -17,21 +27,24 @@ function initialiserDatabase(db) {
                     return reject(err);
                 }
 
-                db.run(`
-                    CREATE TABLE IF NOT EXISTS projets (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        titre TEXT NOT NULL,
-                        categorie TEXT NOT NULL,
-                        statut TEXT NOT NULL,
-                        description TEXT,
-                        budget REAL,
-                        client_id INTEGER
-                    )
-                `, (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-
+               db.run(`
+    CREATE TABLE IF NOT EXISTS projets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titre TEXT NOT NULL,
+        categorie TEXT NOT NULL,
+        statut TEXT NOT NULL,
+        description TEXT,
+                budget REAL,
+        client_id INTEGER NOT NULL,
+localisation TEXT,
+debut_mission TEXT,
+date_precise TEXT,
+FOREIGN KEY (client_id) REFERENCES utilisateurs(id)
+    )
+`, (err) => {
+    if (err) {
+        return reject(err);
+    }
                     db.run(`
                         CREATE TABLE IF NOT EXISTS candidatures (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,

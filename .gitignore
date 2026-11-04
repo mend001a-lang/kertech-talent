@@ -26,3 +26,18 @@ audit-ktt.json
 
 # Journaux
 *.log
+
+# Scripts locaux de migration et de test
+migration-client-id.js
+migration-structure-projets.js
+nettoyage-final-tests.js
+nettoyage-tests.js
+server-test.js
+structure-resultat.txt
+structure-tables.js
+test-initialisation.js
+verifier-dates.js
+
+# Migrations SQLite locales déjà exécutées
+ajouter-dates.js
+ajouter-localisation.js

@@ -882,16 +882,45 @@ console.log("Utilisateur connecté :", utilisateurConnecte);
 
 
     // =========================
-    // BUDGET
-    // =========================
+// BUDGET
+// =========================
 const nouveauBudget = document.createElement("p");
-   nouveauBudget.textContent =
+
+nouveauBudget.textContent =
     "Budget : " +
     (projet.budget === "Non renseigné"
         ? "Non renseigné"
-        : projet.budget + " €");
+        : Number(projet.budget).toLocaleString("fr-FR") + " FCFA");
 
+        // =========================
+// LOCALISATION
+// =========================
 
+const nouvelleLocalisation = document.createElement("p");
+
+if (projet.localisation && projet.localisation.trim() !== "") {
+    nouvelleLocalisation.textContent =
+        "📍 Localisation : " + projet.localisation;
+}
+
+// =========================
+// DATE DE DÉBUT DE MISSION
+// =========================
+
+const nouvelleDateDebut = document.createElement("p");
+
+if (projet.debut_mission === "À une date précise" && projet.date_precise) {
+
+    const [annee, mois, jour] = projet.date_precise.split("-");
+
+    nouvelleDateDebut.textContent =
+        "📅 Début de mission : " + jour + "/" + mois + "/" + annee;
+
+} else if (projet.debut_mission) {
+
+    nouvelleDateDebut.textContent =
+        "📅 Début de mission : " + projet.debut_mission;
+}
     // =========================
     // CATÉGORIE
     // =========================
@@ -974,13 +1003,28 @@ boutonStatut.classList.add(
         nouvelleDescription
     );
 
-    nouvelleCarte.appendChild(
-        nouveauBudget
-    );
+   nouvelleCarte.appendChild(
+    nouveauBudget
+);
 
+// =========================
+// AJOUT DE LA LOCALISATION
+// =========================
+
+if (projet.localisation && projet.localisation.trim() !== "") {
     nouvelleCarte.appendChild(
-        nouvelleCategorie
+        nouvelleLocalisation
     );
+}
+
+// Afficher la date de début si elle est renseignée
+if (nouvelleDateDebut.textContent !== "") {
+    nouvelleCarte.appendChild(nouvelleDateDebut);
+}
+
+nouvelleCarte.appendChild(
+    nouvelleCategorie
+);
 
     nouvelleCarte.appendChild(
         nouveauStatut
@@ -1496,6 +1540,25 @@ publierProjet.addEventListener(
 );
 
 
+// =====================================
+// AFFICHAGE DE LA DATE DE DÉBUT
+// =====================================
+
+const debutMissionProjet = document.getElementById("debutMissionProjet");
+const blocDatePrecise = document.getElementById("blocDatePrecise");
+const datePreciseProjet = document.getElementById("datePreciseProjet");
+
+debutMissionProjet.addEventListener("change", function () {
+
+    if (debutMissionProjet.value === "À une date précise") {
+        blocDatePrecise.hidden = false;
+    } else {
+        blocDatePrecise.hidden = true;
+        datePreciseProjet.value = "";
+    }
+
+});
+
 // ==================================================
 // PUBLICATION D'UN PROJET
 // ==================================================
@@ -1519,7 +1582,20 @@ formProjet.addEventListener(
 
         const categorie =
             categorieProjet.value;
+            console.log(
+    "CATÉGORIE ENVOYÉE AU SERVEUR :",
+    JSON.stringify(categorie)
+    );
+     const localisation =
+    document.getElementById("localisationProjet").value.trim();
 
+// =========================
+// DATE DE DÉBUT DE LA MISSION
+// =========================
+
+const debutMission = debutMissionProjet.value;
+
+const datePrecise = datePreciseProjet.value;
 
         let formulaireValide = true;
 
@@ -1529,6 +1605,25 @@ formProjet.addEventListener(
         erreurDescription.textContent = "";
         erreurBudget.textContent = "";
         erreurCategorie.textContent = "";
+
+        // =========================
+// VALIDATION DATE DE DÉBUT
+// =========================
+
+datePreciseProjet.setCustomValidity("");
+
+if (
+    debutMission === "À une date précise" &&
+    datePrecise === ""
+) {
+    datePreciseProjet.setCustomValidity(
+        "Veuillez choisir une date de début."
+    );
+
+    datePreciseProjet.reportValidity();
+
+    formulaireValide = false;
+}
 
 
         // Titre
@@ -1600,6 +1695,12 @@ const projetAPI = {
     description: description.trim(),
     budget: Number(budget),
     categorie: categorie,
+    localisation: localisation,
+
+    // DATE DE DÉBUT
+    debutMission: debutMission,
+    datePrecise: datePrecise,
+
     statut: "Ouvert"
 };
   const projet = {
