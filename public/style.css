@@ -792,3 +792,20 @@ header h1 {
 }
 
 }
+
+/* =========================
+   IDENTITÉ VISUELLE KËRTECH
+========================= */
+
+.identite-kertech {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-kertech {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
