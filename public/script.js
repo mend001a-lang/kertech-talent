@@ -2096,23 +2096,35 @@ fetch("/inscription", {
 
     return resultat;
 })
+
 .then(function(resultat) {
     const messageInscription = document.getElementById("messageInscription");
 
     messageInscription.textContent = resultat.message;
     messageInscription.style.color = "green";
+
     formInscription.reset();
+
+    // Effacer le message après 5 secondes
+    setTimeout(function() {
+
+        console.log("TEST : délai de 5 secondes terminé");
+
+        if (messageInscription.textContent === resultat.message) {
+            messageInscription.textContent = "";
+        }
+
+    }, 5000);
+
 })
 .catch(function(erreur) {
 
     const messageInscription = document.getElementById("messageInscription");
 
     messageInscription.textContent = erreur.message;
-
     messageInscription.style.color = "red";
 
 });
-    
 
 });
 // =========================
