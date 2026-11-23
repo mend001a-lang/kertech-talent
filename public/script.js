@@ -2489,7 +2489,19 @@ document.getElementById("listeCandidaturesClient").replaceChildren();
 document.getElementById("messageCandidaturesClient").textContent = "";
 
 // Afficher le message de déconnexion
-document.querySelector("#messageConnexion").textContent = resultat.message;
+const messageDeconnexion = document.querySelector("#messageConnexion");
+
+messageDeconnexion.textContent = resultat.message;
+messageDeconnexion.style.color = "green";
+
+// Effacer le message après 5 secondes
+setTimeout(function() {
+
+    if (messageDeconnexion.textContent === resultat.message) {
+        messageDeconnexion.textContent = "";
+    }
+
+}, 5000);
     } catch (erreur) {
         console.error("Erreur :", erreur);
 
