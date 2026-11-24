@@ -1228,6 +1228,23 @@ if (boutonRefus) {
     boutonRefus.remove();
 }
 
+
+// Actualiser le statut du projet
+projet.statut = resultat.statut_projet;
+
+// Actualiser le texte affiché
+nouveauStatut.textContent = "Statut : " + projet.statut;
+
+// Actualiser le statut associé au bouton
+boutonStatut.dataset.statut = projet.statut;
+
+// Actualiser la visibilité des boutons
+actualiserBoutonsSuppression();
+
+// Actualiser les statistiques du client
+chargerStatistiquesClient();
+
+
             alert("Candidature acceptée avec succès !");
 
         } catch (erreur) {
