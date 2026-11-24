@@ -795,6 +795,8 @@ if (candidature.statut === "En attente") {
             statut.textContent = "Statut : " + resultat.statut;
 
             boutonAccepter.remove();
+
+
             boutonRefuser.remove();
 
             alert("Statut de la candidature mis à jour !");
@@ -1217,8 +1219,14 @@ if (candidature.statut === "En attente") {
 
             candidature.statut = resultat.statut;
 afficherStatut();
+boutonAccepter.remove();
 
-            boutonAccepter.remove();
+// Supprimer également le bouton Refuser
+const boutonRefus = bloc.querySelector(".btn-refuser");
+
+if (boutonRefus) {
+    boutonRefus.remove();
+}
 
             alert("Candidature acceptée avec succès !");
 
