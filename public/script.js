@@ -1754,6 +1754,9 @@ try {
     // Récupérer l'identifiant du projet enregistré
     projet.id = data.id;
 
+    // Identifier le propriétaire pour l'affichage
+    projet.client_id = utilisateurConnecte.id;
+
     // Actualiser les compteurs du tableau de bord client
     await chargerStatistiquesClient();
 });
