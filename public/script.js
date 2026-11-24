@@ -1076,24 +1076,31 @@ boutonVoirCandidatures.addEventListener("click", async function () {
             throw new Error("Erreur HTTP : " + reponse.status);
         }
 
-      const candidatures = await reponse.json();
+      
+const candidatures = await reponse.json();
 
 // Actualiser le nombre de candidatures du projet
 projet.candidatures = candidatures.length;
 
 // Actualiser les données du bouton Supprimer
-boutonSupprimer.dataset.candidatures = candidatures.length;
+const boutonSuppression =
+    nouvelleCarte.querySelector(".btn-supprimer");
+
+if (boutonSuppression) {
+    boutonSuppression.dataset.candidatures = candidatures.length;
+}
 
 // Actualiser la visibilité des boutons
 actualiserBoutonsSuppression();
 
+// Vider la liste avant son affichage
 listeCandidatures.replaceChildren();
 
-        if (candidatures.length === 0) {
-            listeCandidatures.textContent =
-                "Aucune candidature pour ce projet.";
-            return;
-        }
+if (candidatures.length === 0) {
+    listeCandidatures.textContent =
+        "Aucune candidature pour ce projet.";
+    return;
+}
 
         candidatures.forEach(function (candidature) {
             const bloc = document.createElement("div");
@@ -1206,6 +1213,7 @@ if (candidature.statut === "En attente") {
                     resultat.erreur || "Impossible d'accepter la candidature."
                 );
             }
+            
 
             candidature.statut = resultat.statut;
 afficherStatut();
