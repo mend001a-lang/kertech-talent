@@ -1791,8 +1791,11 @@ try {
         */
 
 
-        // Affichage de la carte
-        creerCarteProjet(projet);
+      // Affichage de la carte
+creerCarteProjet(projet);
+
+// Actualiser les droits d'affichage des boutons
+actualiserBoutonsSuppression();
         // ==================================================
 // CHARGEMENT DES PROJETS SAUVEGARDÉS
 // ==================================================
