@@ -1704,16 +1704,16 @@ const projetAPI = {
     statut: "Ouvert"
 };
   const projet = {
-
     id: null,
     titre: titre.trim(),
-    description:
-        description.trim(),
+    description: description.trim(),
     budget: budget,
     categorie: categorie,
+    localisation: localisation,
+    debut_mission: debutMission,
+    date_precise: datePrecise,
     statut: "Ouvert",
     candidatures: 0
-
 };
 try {
 
