@@ -1076,9 +1076,18 @@ boutonVoirCandidatures.addEventListener("click", async function () {
             throw new Error("Erreur HTTP : " + reponse.status);
         }
 
-        const candidatures = await reponse.json();
+      const candidatures = await reponse.json();
 
-        listeCandidatures.replaceChildren();
+// Actualiser le nombre de candidatures du projet
+projet.candidatures = candidatures.length;
+
+// Actualiser les données du bouton Supprimer
+boutonSupprimer.dataset.candidatures = candidatures.length;
+
+// Actualiser la visibilité des boutons
+actualiserBoutonsSuppression();
+
+listeCandidatures.replaceChildren();
 
         if (candidatures.length === 0) {
             listeCandidatures.textContent =
