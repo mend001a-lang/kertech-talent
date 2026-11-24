@@ -1800,15 +1800,23 @@ try {
         formProjet.hidden = true;
 
 
-        // Succès
+            // Succès
         messageProjet.textContent =
             "Votre projet a bien été publié !";
-            messageProjet.classList.remove("erreur");
 
-        messageProjet.classList.add(
-            "succes"
-        );
+        messageProjet.classList.remove("erreur");
 
+        messageProjet.classList.add("succes");
+
+        // Masquer le message après 5 secondes
+        setTimeout(function () {
+            if (
+                messageProjet.textContent ===
+                "Votre projet a bien été publié !"
+            ) {
+                messageProjet.textContent = "";
+            }
+        }, 5000);
 
         filtrerProjets();
     }
