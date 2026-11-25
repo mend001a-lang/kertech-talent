@@ -1057,6 +1057,9 @@ const boutonPostuler =
 
     
 boutonVoirCandidatures.addEventListener("click", async function () {
+    const versionAuDepart = versionSession;
+    const clientIdAuDepart = utilisateurConnecte?.id;
+
     if (!listeCandidatures.hidden) {
         listeCandidatures.hidden = true;
         return;
@@ -1080,6 +1083,16 @@ boutonVoirCandidatures.addEventListener("click", async function () {
 
       
 const candidatures = await reponse.json();
+
+// Ignorer une réponse provenant d'une ancienne session
+if (
+    versionSession !== versionAuDepart ||
+    utilisateurConnecte?.id !== clientIdAuDepart ||
+    utilisateurConnecte?.role !== "client" ||
+    Number(utilisateurConnecte?.id) !== Number(projet.client_id)
+) {
+    return;
+}
 
 // Actualiser le nombre de candidatures du projet
 projet.candidatures = candidatures.length;
@@ -1316,17 +1329,23 @@ if (candidature.statut === "En attente") {
             listeCandidatures.appendChild(bloc);
         });
 
-    } catch (erreur) {
+       } catch (erreur) {
+        // Ignorer les erreurs provenant d'une ancienne session
+        if (
+            versionSession !== versionAuDepart ||
+            utilisateurConnecte?.id !== clientIdAuDepart ||
+            utilisateurConnecte?.role !== "client" ||
+            Number(utilisateurConnecte?.id) !== Number(projet.client_id)
+        ) {
+            return;
+        }
+
         console.error("Erreur candidatures :", erreur);
 
         listeCandidatures.textContent =
             "Impossible de charger les candidatures. Vérifiez votre connexion et vos autorisations.";
     }
 });
-
-    nouvelleCarte.appendChild(
-    boutonStatut
-);
 
 // Identifier le propriétaire du projet
 boutonStatut.dataset.clientId = projet.client_id;
@@ -2521,6 +2540,11 @@ btnDeconnexion.addEventListener("click", async function () {
  // Invalider les anciens chargements
 versionSession++;
 
+// Effacer les candidatures ouvertes dans les cartes des projets
+document.querySelectorAll(".liste-candidatures").forEach(function (liste) {
+    liste.replaceChildren();
+    liste.hidden = true;
+});
  // Actualiser les autorisations des projets
  actualiserBoutonsSuppression();
 
