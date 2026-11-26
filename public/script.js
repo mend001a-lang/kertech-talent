@@ -426,6 +426,7 @@ setTimeout(() => {
         }
 
         console.log("Candidature SQLite :", resultat);
+        chargerMesCandidatures();
 
     } catch (erreur) {
         console.error("Erreur candidature :", erreur);
@@ -2321,6 +2322,7 @@ if (data.utilisateur.role === "freelance") {
 
 async function chargerMesCandidatures() {
 
+    
     const section = document.getElementById("mesCandidatures");
     const liste = document.getElementById("listeMesCandidatures");
     const message = document.getElementById("messageMesCandidatures");
