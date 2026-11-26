@@ -2,7 +2,6 @@
 require("dotenv").config();
 
 const express = require("express");
-const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
 const initialiserDatabase = require("./initialiser-db");
 const bcrypt = require("bcrypt");
@@ -53,10 +52,6 @@ const PORT = process.env.PORT || 3000;
 // CONFIGURATION DU SERVEUR
 // =====================================
 
-app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://127.0.0.1:5500",
-    credentials: true
-}));
 
 app.use(express.json());
 
