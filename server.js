@@ -77,15 +77,30 @@ app.use(session({
     }
 }));
 
-
+   
 /* =====================================
    DECONNEXION UTILISATEUR
 ===================================== */
 
+
 app.post("/deconnexion", (req, res) => {
 
-    req.session.destroy((err) => {
+     const origineAutorisee = process.env.APP_ORIGIN;
+    const origineRequete = req.get("Origin");
 
+    if (!origineAutorisee) {
+        return res.status(500).json({
+            erreur: "Configuration de sécurité manquante."
+        });
+    }
+
+    if (origineRequete !== origineAutorisee) {
+        return res.status(403).json({
+            erreur: "Origine non autorisée."
+        });
+    }
+
+    req.session.destroy((err) => {
         if (err) {
             console.error("Erreur de déconnexion :", err);
 
@@ -101,9 +116,7 @@ app.post("/deconnexion", (req, res) => {
         return res.status(200).json({
             message: "Déconnexion réussie !"
         });
-
     });
-
 });
 
 
